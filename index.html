@@ -29,9 +29,14 @@
     }
     .nav-logo { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: var(--text); text-decoration: none; }
     .nav-logo span { color: var(--accent); }
-    .nav-links { display: flex; gap: 2rem; list-style: none; }
-    .nav-links a { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.2s; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+    .nav-links > li { position: relative; }
+    .nav-links a { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.2s; display: block; padding: 0.5rem 0; }
     .nav-links a:hover { color: var(--text); }
+    .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; background: #0f1526; border: 1px solid #1e2d4a; min-width: 240px; list-style: none; z-index: 200; padding: 0.5rem 0; }
+    .dropdown:hover .dropdown-menu { display: block; }
+    .dropdown-menu li a { padding: 0.6rem 1.2rem; font-size: 0.7rem; color: var(--muted); display: block; text-decoration: none; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; transition: background 0.15s, color 0.15s; }
+    .dropdown-menu li a:hover { background: #141c30; color: var(--text); }
     .hero {
       position: relative; min-height: 100vh; display: flex; flex-direction: column;
       justify-content: center; padding: 8rem 2.5rem 4rem; z-index: 1; overflow: hidden;
@@ -125,8 +130,16 @@
   <nav>
     <a href="#" class="nav-logo"><span>//</span> ZabbixTuto</a>
     <ul class="nav-links">
-      <li><a href="#tutoriels">Tutoriels</a></li>
-      <li><a href="#infra">Infrastructure</a></li>
+      <li><a href="index.html">Accueil</a></li>
+      <li class="dropdown">
+        <a href="#">Tutoriels ▾</a>
+        <ul class="dropdown-menu">
+          <li><a href="zabbix-server.html">01 — Serveur Zabbix</a></li>
+          <li><a href="pfsense.html">02 — Intégration pfSense</a></li>
+          <li><a href="hyperv.html">03 — Intégration Hyper-V</a></li>
+          <li><a href="dashboard.html">04 — Tableaux de bord</a></li>
+        </ul>
+      </li>
       <li><a href="#demarrer">Démarrer</a></li>
       <li><a href="https://github.com/" target="_blank">GitHub →</a></li>
     </ul>
@@ -179,28 +192,28 @@
       <h2 class="section-title">Tutoriels</h2>
     </div>
     <div class="cards reveal">
-      <a class="card" href="#">
+      <a class="card" href="zabbix-server.html">
         <span class="card-number">001</span>
         <div class="card-icon">🖥️</div>
         <div class="card-title">Serveur Zabbix</div>
         <div class="card-desc">Installation et configuration du serveur de supervision Zabbix dans un environnement virtualisé Hyper-V.</div>
         <span class="card-tag tag-setup">Setup</span>
       </a>
-      <a class="card" href="#">
+      <a class="card" href="pfsense.html">
         <span class="card-number">002</span>
         <div class="card-icon">🔥</div>
         <div class="card-title">Intégration pfSense</div>
         <div class="card-desc">Supervision du pare-feu pfSense via SNMP v2c. Configuration de la community string et ajout du template dans Zabbix.</div>
         <span class="card-tag tag-snmp">SNMP</span>
       </a>
-      <a class="card" href="#">
+      <a class="card" href="hyperv.html">
         <span class="card-number">003</span>
         <div class="card-icon">⚡</div>
         <div class="card-title">Intégration Hyper-V</div>
         <div class="card-desc">Installation de l'agent Zabbix sur Hyper-V Server standalone. Métriques CPU, RAM, disque et services Windows.</div>
         <span class="card-tag tag-agent">Agent</span>
       </a>
-      <a class="card" href="#">
+      <a class="card" href="dashboard.html">
         <span class="card-number">004</span>
         <div class="card-icon">📊</div>
         <div class="card-title">Tableaux de bord</div>
@@ -221,7 +234,7 @@
           <div class="dot dot-red"></div>
           <div class="dot dot-yellow"></div>
           <div class="dot dot-green"></div>
-          <span class="terminal-label">zabbix@192.168.2.18 — bash</span>
+          <span class="terminal-label"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="22584340404b5a62131b100c13141a0c100c131a">[email&#160;protected]</a> — bash</span>
         </div>
         <div class="terminal-body">
           <div><span class="t-comment"># Tester la communication SNMP avec pfSense</span></div>
@@ -282,10 +295,5 @@
     </div>
   </footer>
 
-  <script>
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-  </script>
-</body>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    const observer = new IntersectionObserver((entries))
