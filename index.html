@@ -221,7 +221,7 @@
           <div class="dot dot-red"></div>
           <div class="dot dot-yellow"></div>
           <div class="dot dot-green"></div>
-          <span class="terminal-label"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="22584340404b5a62131b100c13141a0c100c131a">[email&#160;protected]</a> — bash</span>
+          <span class="terminal-label">zabbix@192.168.2.18 — bash</span>
         </div>
         <div class="terminal-body">
           <div><span class="t-comment"># Tester la communication SNMP avec pfSense</span></div>
@@ -282,5 +282,10 @@
     </div>
   </footer>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-    const observer = new IntersectionObserver((entries)
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
