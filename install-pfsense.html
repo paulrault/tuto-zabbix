@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Installation pfSense 2.7 — ZabbixTuto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0e1a; --bg2: #0f1526; --surface: #141c30; --border: #1e2d4a;
+    --accent: #e8372a; --blue: #3b82f6; --green: #22c55e; --orange: #f97316;
+    --text: #e2e8f0; --muted: #64748b;
+    --mono: 'Space Mono', monospace; --sans: 'Syne', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none; z-index: 0;
+  }
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 2.5rem;
+    background: rgba(10,14,26,0.9); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: var(--text); text-decoration: none; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+  .nav-links > li { position: relative; }
+  .nav-links a { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s; padding: 0.5rem 0; display: block; }
+  .nav-links a:hover { color: var(--text); }
+  .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; background: var(--bg2); border: 1px solid var(--border); min-width: 280px; list-style: none; z-index: 200; padding: 0.5rem 0; }
+  .dropdown:hover .dropdown-menu { display: block; }
+  .dropdown-menu li a { padding: 0.6rem 1.2rem; font-size: 0.7rem; color: var(--muted); display: block; text-decoration: none; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; transition: background 0.15s, color 0.15s; }
+  .dropdown-menu li a:hover { background: var(--surface); color: var(--text); }
+  .dropdown-menu .separator { border-top: 1px solid var(--border); margin: 0.4rem 0; }
+  .dropdown-menu .section-label { padding: 0.4rem 1.2rem; font-size: 0.6rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; }
+  .nav-burger { display: none; background: none; border: 1px solid var(--border); color: var(--text); padding: 0.4rem 0.8rem; cursor: pointer; font-size: 1rem; }
+  .mobile-menu { display: none; position: fixed; top: 60px; left: 0; right: 0; background: var(--bg2); border-bottom: 1px solid var(--border); z-index: 99; padding: 1rem; max-height: calc(100vh - 60px); overflow-y: auto; }
+  .mobile-menu.open { display: block; }
+  .mobile-menu a { display: block; font-family: var(--mono); font-size: 0.75rem; color: var(--muted); text-decoration: none; padding: 0.65rem 0; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.08em; }
+  .mobile-menu a:last-child { border-bottom: none; }
+  .mobile-menu .m-section { font-family: var(--mono); font-size: 0.6rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; padding: 0.75rem 0 0.25rem; }
+  .page-layout { display: flex; padding-top: 60px; min-height: 100vh; position: relative; z-index: 1; }
+  .sidebar { width: 260px; flex-shrink: 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; border-right: 1px solid var(--border); background: var(--bg2); padding: 2rem 0; }
+  .sidebar-title { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15em; padding: 0 1.5rem; margin-bottom: 1rem; }
+  .sidebar-nav { list-style: none; }
+  .sidebar-nav li a { display: flex; align-items: center; gap: 0.75rem; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-decoration: none; padding: 0.6rem 1.5rem; border-left: 2px solid transparent; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.06em; }
+  .sidebar-nav li a:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .sidebar-nav li a.active { color: var(--text); border-left-color: var(--accent); background: rgba(232,55,42,0.06); }
+  .sidebar-nav li a .step-num { color: var(--accent); font-size: 0.6rem; flex-shrink: 0; }
+  .sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 1rem 1.5rem; }
+  .main-content { flex: 1; max-width: 820px; padding: 3rem 3.5rem; }
+  .chapter-header { margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+  .chapter-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .chapter-num { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; }
+  .chapter-tag { font-family: var(--mono); font-size: 0.65rem; padding: 0.2rem 0.7rem; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .tag-win { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .tag-linux { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .tag-pfsense { background: rgba(249,115,22,0.15); color: #fb923c; }
+  .tag-install { background: rgba(168,85,247,0.15); color: #c084fc; }
+  .chapter-title { font-size: 2.8rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; margin-bottom: 1rem; }
+  .chapter-desc { font-size: 1rem; color: var(--muted); line-height: 1.7; max-width: 580px; }
+  .step { margin-bottom: 3rem; }
+  .step-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+  .step-badge { width: 32px; height: 32px; background: var(--accent); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.75rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .step-title { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; }
+  p { color: #94a3b8; line-height: 1.75; margin-bottom: 1rem; font-size: 0.95rem; }
+  ol { color: #94a3b8; padding-left: 1.5rem; margin-bottom: 1rem; }
+  ol li { margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.7; padding-left: 0.5rem; }
+  ol li strong { color: var(--text); }
+  .code-block { background: #080c18; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin: 1.25rem 0; }
+  .code-header { background: var(--surface); padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .code-lang { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .code-copy { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); background: none; border: 1px solid var(--border); padding: 0.2rem 0.6rem; cursor: pointer; border-radius: 2px; transition: color 0.2s; }
+  .code-copy:hover { color: var(--text); }
+  .code-body { padding: 1.25rem 1.5rem; font-family: var(--mono); font-size: 0.8rem; line-height: 1.8; overflow-x: auto; }
+  .code-body .c { color: #475569; }
+  .code-body .s { color: #4ade80; }
+  .code-body .p { color: #4ade80; }
+  .info-box { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.25); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.75rem; }
+  .info-box .icon { flex-shrink: 0; font-size: 1rem; margin-top: 0.1rem; }
+  .info-box p { color: #93c5fd; margin: 0; font-size: 0.85rem; }
+  .warn-box { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.75rem; }
+  .warn-box .icon { flex-shrink: 0; font-size: 1rem; }
+  .warn-box p { color: #fbbf24; margin: 0; font-size: 0.85rem; }
+  .success-box { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.75rem; }
+  .success-box .icon { flex-shrink: 0; font-size: 1rem; }
+  .success-box p { color: #4ade80; margin: 0; font-size: 0.85rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.85rem; }
+  th { background: var(--surface); font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 0.75rem 1rem; text-align: left; border: 1px solid var(--border); }
+  td { padding: 0.75rem 1rem; border: 1px solid var(--border); color: #94a3b8; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  td code { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); background: rgba(232,55,42,0.1); padding: 0.1rem 0.4rem; border-radius: 2px; }
+  .pagination { display: flex; justify-content: space-between; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+  .page-btn { display: flex; flex-direction: column; gap: 0.3rem; text-decoration: none; padding: 1rem 1.5rem; border: 1px solid var(--border); border-radius: 2px; transition: border-color 0.2s, background 0.2s; max-width: 240px; }
+  .page-btn:hover { border-color: var(--accent); background: rgba(232,55,42,0.05); }
+  .page-btn-dir { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .page-btn-title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+  .page-btn.next { text-align: right; margin-left: auto; }
+  footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 1.5rem 2.5rem; display: flex; justify-content: space-between; align-items: center; background: var(--bg2); margin-top: 4rem; }
+  .footer-left { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+  .footer-left span { color: var(--accent); }
+  .footer-right { display: flex; gap: 1.5rem; }
+  .footer-right a { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); text-decoration: none; text-transform: uppercase; letter-spacing: 0.08em; transition: color 0.2s; }
+  .footer-right a:hover { color: var(--text); }
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main-content { padding: 2rem 1.5rem; }
+    .chapter-title { font-size: 2rem; }
+    .nav-links { display: none; }
+    .nav-burger { display: block; }
+  }
+</style>
+</head>
+<body>
+  
+  <nav>
+    <a href="index.html" class="nav-logo"><span>//</span> ZabbixTuto</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li class="dropdown">
+        <a href="#">Tutoriels ▾</a>
+        <ul class="dropdown-menu">
+          <li class="section-label">Supervision Zabbix</li>
+          <li><a href="zabbix-server.html">01 — Serveur Zabbix</a></li>
+          <li><a href="pfsense.html">02 — Intégration pfSense</a></li>
+          <li><a href="hyperv.html">03 — Intégration Hyper-V</a></li>
+          <li><a href="dashboard.html">04 — Tableaux de bord</a></li>
+          <li class="separator"></li>
+          <li class="section-label">Hyper-V</li>
+          <li><a href="hyperv-prise-en-main.html">05 — Prise en main Hyper-V</a></li>
+          <li><a href="hyperv-vms.html">06 — Création de VMs</a></li>
+          <li class="separator"></li>
+          <li class="section-label">Installations</li>
+          <li><a href="install-windows-server.html">07 — Windows Server 2025</a></li>
+          <li><a href="install-windows-client.html">08 — Windows 10/11</a></li>
+          <li><a href="install-debian.html">09 — Debian Linux</a></li>
+          <li><a href="install-pfsense.html">10 — pfSense 2.7</a></li>
+        </ul>
+      </li>
+      <li><a href="https://github.com/" target="_blank">GitHub →</a></li>
+    </ul>
+    <button class="nav-burger" onclick="toggleMenu()">☰</button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html">Accueil</a>
+    <div class="m-section">Supervision Zabbix</div>
+    <a href="zabbix-server.html">01 — Serveur Zabbix</a>
+    <a href="pfsense.html">02 — Intégration pfSense</a>
+    <a href="hyperv.html">03 — Intégration Hyper-V</a>
+    <a href="dashboard.html">04 — Tableaux de bord</a>
+    <div class="m-section">Hyper-V</div>
+    <a href="hyperv-prise-en-main.html">05 — Prise en main Hyper-V</a>
+    <a href="hyperv-vms.html">06 — Création de VMs</a>
+    <div class="m-section">Installations</div>
+    <a href="install-windows-server.html">07 — Windows Server 2025</a>
+    <a href="install-windows-client.html">08 — Windows 10/11</a>
+    <a href="install-debian.html">09 — Debian Linux</a>
+    <a href="install-pfsense.html">10 — pfSense 2.7</a>
+    <a href="https://github.com/" target="_blank">GitHub →</a>
+  </div>
+
+  
+<div class="page-layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Sommaire</div>
+    <ul class="sidebar-nav">
+      <li><a href="#prerequis" class="active"><span class="step-num">01</span> Prérequis</a></li>
+      <li><a href="#demarrage"><span class="step-num">02</span> Démarrage ISO</a></li>
+      <li><a href="#installation"><span class="step-num">03</span> Installation</a></li>
+      <li><a href="#interfaces"><span class="step-num">04</span> Interfaces réseau</a></li>
+      <li><a href="#webgui"><span class="step-num">05</span> Interface web</a></li>
+      <li><a href="#reseau"><span class="step-num">06</span> Configuration réseau</a></li>
+      <li><a href="#securite"><span class="step-num">07</span> Sécurité</a></li>
+    </ul>
+    <hr class="sidebar-divider"/>
+    <ul class="sidebar-nav">
+      <li><a href="install-debian.html">← Debian Linux</a></li>
+      <li><a href="pfsense.html">→ Intégration Zabbix</a></li>
+    </ul>
+  </aside>
+  <main class="main-content">
+    <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="chapter-num">Chapitre 10</span>
+        <span class="chapter-tag tag-pfsense">pfSense</span>
+        <span class="chapter-tag tag-install">Installation</span>
+      </div>
+      <h1 class="chapter-title">pfSense 2.7</h1>
+      <p class="chapter-desc">Installation et configuration initiale de pfSense 2.7.x comme pare-feu/routeur dans une VM Hyper-V avec deux interfaces réseau (WAN et LAN).</p>
+    </div>
+
+    <div class="step" id="prerequis">
+      <div class="step-header"><div class="step-badge">01</div><h2 class="step-title">Prérequis</h2></div>
+      <table>
+        <tr><th>Élément</th><th>Valeur</th></tr>
+        <tr><td>ISO pfSense CE</td><td>Téléchargeable sur netgate.com/downloads</td></tr>
+        <tr><td>RAM allouée</td><td>1 024 Mo minimum</td></tr>
+        <tr><td>Disque virtuel</td><td>10 Go (VHDX)</td></tr>
+        <tr><td>Génération VM</td><td>Génération 1</td></tr>
+        <tr><td>Interfaces réseau</td><td>2 cartes réseau : une WAN, une LAN</td></tr>
+      </table>
+      <div class="warn-box"><span class="icon">⚠️</span><p>pfSense nécessite <strong>deux interfaces réseau</strong> dans la VM : une connectée au commutateur externe (WAN) et une connectée au commutateur interne ou LAN (pour le réseau local des VMs).</p></div>
+      <p>Dans Hyper-V, ajouter une seconde carte réseau à la VM pfSense avant de démarrer :</p>
+      <ol>
+        <li>Clic droit sur la VM → <strong>Paramètres</strong></li>
+        <li><strong>Ajouter un matériel</strong> → <strong>Carte réseau héritée</strong></li>
+        <li>Connecter la première carte au commutateur WAN (externe)</li>
+        <li>Connecter la seconde carte au commutateur LAN (interne ou externe selon votre config)</li>
+      </ol>
+    </div>
+
+    <div class="step" id="demarrage">
+      <div class="step-header"><div class="step-badge">02</div><h2 class="step-title">Démarrage sur l'ISO</h2></div>
+      <p>Au démarrage, l'écran de boot pfSense (FreeBSD) apparaît. Laisser le compte à rebours se terminer ou appuyer sur <strong>Entrée</strong> pour démarrer immédiatement.</p>
+      <p>Le système démarre sur un live environnement FreeBSD et lance automatiquement l'installateur pfSense.</p>
+    </div>
+
+    <div class="step" id="installation">
+      <div class="step-header"><div class="step-badge">03</div><h2 class="step-title">Installation sur le disque</h2></div>
+      <ol>
+        <li>Sélectionner <strong>"Install"</strong> sur l'écran d'accueil de l'installateur</li>
+        <li><strong>Keymap</strong> → Sélectionner <strong>"French ISO-8859-1"</strong> ou continuer avec le clavier par défaut</li>
+        <li><strong>Partitionnement</strong> → Sélectionner <strong>"Auto (ZFS)"</strong> (recommandé) ou <strong>"Auto (UFS)"</strong></li>
+        <li>Pour ZFS → <strong>"Proceed with Installation"</strong> → sélectionner le disque virtuel → <strong>"Stripe"</strong></li>
+        <li>Confirmer la destruction des données → <strong>"YES"</strong></li>
+      </ol>
+      <p>L'installation copie les fichiers système (2-3 minutes). À la fin :</p>
+      <ol>
+        <li>Sélectionner <strong>"No"</strong> pour ne pas ouvrir de shell de configuration</li>
+        <li>Sélectionner <strong>"Reboot"</strong></li>
+        <li><strong>Retirer l'ISO</strong> depuis les paramètres Hyper-V avant le redémarrage</li>
+      </ol>
+    </div>
+
+    <div class="step" id="interfaces">
+      <div class="step-header"><div class="step-badge">04</div><h2 class="step-title">Configuration des interfaces réseau</h2></div>
+      <p>Au premier démarrage, pfSense détecte les interfaces et demande de les assigner. Dans la console :</p>
+      <ol>
+        <li><strong>"Should VLANs be set up now?"</strong> → <code>n</code></li>
+        <li><strong>"Enter the WAN interface name"</strong> → ex: <code>hn0</code> (première carte réseau Hyper-V)</li>
+        <li><strong>"Enter the LAN interface name"</strong> → ex: <code>hn1</code> (seconde carte réseau)</li>
+        <li>Confirmer l'assignation → <code>y</code></li>
+      </ol>
+      <table>
+        <tr><th>Interface</th><th>Rôle</th><th>IP par défaut</th></tr>
+        <tr><td><code>hn0</code> → WAN</td><td>Connexion vers l'extérieur / réseau hôte</td><td>DHCP (obtenue automatiquement)</td></tr>
+        <tr><td><code>hn1</code> → LAN</td><td>Réseau local des VMs</td><td><code>192.168.1.1/24</code></td></tr>
+      </table>
+      <div class="info-box"><span class="icon">ℹ️</span><p>Dans notre environnement, pfSense a l'IP LAN <code>192.168.2.1</code>. L'IP par défaut <code>192.168.1.1</code> peut être modifiée depuis la console ou l'interface web.</p></div>
+    </div>
+
+    <div class="step" id="webgui">
+      <div class="step-header"><div class="step-badge">05</div><h2 class="step-title">Accès à l'interface web</h2></div>
+      <p>Depuis une VM connectée au réseau LAN de pfSense, ouvrir un navigateur et accéder à :</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">url</span><button class="code-copy">Copier</button></div>
+        <div class="code-body">https://192.168.1.1</div>
+      </div>
+      <table>
+        <tr><th>Champ</th><th>Valeur par défaut</th></tr>
+        <tr><td>Identifiant</td><td><code>admin</code></td></tr>
+        <tr><td>Mot de passe</td><td><code>pfsense</code></td></tr>
+      </table>
+      <div class="warn-box"><span class="icon">⚠️</span><p>Changer immédiatement le mot de passe par défaut lors de la première connexion. L'assistant de configuration se lance automatiquement.</p></div>
+      <p>L'assistant de configuration initiale (Setup Wizard) guide à travers :</p>
+      <ol>
+        <li>Nom d'hôte et domaine</li>
+        <li>Serveur DNS</li>
+        <li>Configuration du WAN</li>
+        <li>Configuration du LAN (IP et masque)</li>
+        <li>Changement du mot de passe admin</li>
+      </ol>
+    </div>
+
+    <div class="step" id="reseau">
+      <div class="step-header"><div class="step-badge">06</div><h2 class="step-title">Configuration réseau LAN</h2></div>
+      <p>Pour changer l'IP LAN de pfSense vers <code>192.168.2.1</code>, aller dans <strong>Interfaces → LAN</strong> :</p>
+      <table>
+        <tr><th>Paramètre</th><th>Valeur</th></tr>
+        <tr><td>IPv4 Configuration Type</td><td>Static IPv4</td></tr>
+        <tr><td>IPv4 Address</td><td><code>192.168.2.1</code></td></tr>
+        <tr><td>Subnet Mask</td><td><code>/24</code> (255.255.255.0)</td></tr>
+      </table>
+      <p>Configurer le serveur DHCP pour le réseau LAN dans <strong>Services → DHCP Server → LAN</strong> :</p>
+      <table>
+        <tr><th>Paramètre</th><th>Valeur</th></tr>
+        <tr><td>Enable</td><td>✅ Coché</td></tr>
+        <tr><td>Range From</td><td><code>192.168.2.100</code></td></tr>
+        <tr><td>Range To</td><td><code>192.168.2.200</code></td></tr>
+        <tr><td>DNS Server</td><td><code>192.168.2.1</code></td></tr>
+      </table>
+    </div>
+
+    <div class="step" id="securite">
+      <div class="step-header"><div class="step-badge">07</div><h2 class="step-title">Sécurité de base</h2></div>
+      <p>Dans <strong>System → Advanced → Admin Access</strong> :</p>
+      <table>
+        <tr><th>Paramètre</th><th>Recommandation</th></tr>
+        <tr><td>Protocol</td><td>HTTPS uniquement</td></tr>
+        <tr><td>TCP Port</td><td><code>8443</code> (port non standard)</td></tr>
+        <tr><td>Anti-lockout Rule</td><td>✅ Activé</td></tr>
+        <tr><td>SSH</td><td>Désactiver si non nécessaire</td></tr>
+      </table>
+      <p>Dans <strong>System → Update</strong>, vérifier et installer les dernières mises à jour de pfSense.</p>
+      <div class="success-box"><span class="icon">✅</span><p>pfSense 2.7 est installé et configuré. Le pare-feu est opérationnel. Vous pouvez maintenant activer SNMP pour le superviser avec Zabbix (voir chapitre Intégration pfSense).</p></div>
+    </div>
+
+    <div class="pagination">
+      <a href="install-debian.html" class="page-btn">
+        <span class="page-btn-dir">← Précédent</span>
+        <span class="page-btn-title">Debian Linux</span>
+      </a>
+      <a href="pfsense.html" class="page-btn next">
+        <span class="page-btn-dir">Suivant →</span>
+        <span class="page-btn-title">Intégration Zabbix</span>
+      </a>
+    </div>
+  </main>
+</div>
+  
+  <footer>
+    <div class="footer-left"><span>//</span> ZabbixTuto — BTS SIO 2026</div>
+    <div class="footer-right">
+      <a href="https://github.com/" target="_blank">GitHub</a>
+      <a href="https://www.zabbix.com/documentation" target="_blank">Docs Zabbix</a>
+    </div>
+  </footer>
+
+  <script>
+  function toggleMenu() { document.getElementById('mobileMenu').classList.toggle('open'); }
+  const steps = document.querySelectorAll('.step[id]');
+  const sideLinks = document.querySelectorAll('.sidebar-nav a[href^="#"]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        sideLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector('.sidebar-nav a[href="#' + e.target.id + '"]');
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+  steps.forEach(s => observer.observe(s));
+  document.querySelectorAll('.code-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.closest('.code-block').querySelector('.code-body').innerText;
+      navigator.clipboard.writeText(code);
+      btn.textContent = 'Copié !';
+      setTimeout(() => btn.textContent = 'Copier', 1500);
+    });
+  });
+</script>
+</body>
+</html>
