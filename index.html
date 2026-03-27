@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZabbixTuto — Supervision Réseau</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0e1a; --bg2: #0f1526; --surface: #141c30; --border: #1e2d4a;
+      --accent: #e8372a; --accent2: #f97316; --blue: #3b82f6;
+      --text: #e2e8f0; --muted: #64748b;
+      --mono: 'Space Mono', monospace; --sans: 'Syne', sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+      background-size: 40px 40px; pointer-events: none; z-index: 0;
+    }
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2.5rem;
+      background: rgba(10,14,26,0.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: var(--text); text-decoration: none; }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+    .hero {
+      position: relative; min-height: 100vh; display: flex; flex-direction: column;
+      justify-content: center; padding: 8rem 2.5rem 4rem; z-index: 1; overflow: hidden;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(232,55,42,0.1); border: 1px solid rgba(232,55,42,0.3);
+      color: var(--accent); font-family: var(--mono); font-size: 0.7rem;
+      letter-spacing: 0.15em; text-transform: uppercase; padding: 0.4rem 1rem;
+      border-radius: 2px; margin-bottom: 2rem; width: fit-content;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-badge::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+    .hero h1 { font-family: var(--sans); font-size: clamp(3rem,8vw,7rem); font-weight: 800; line-height: 0.95; letter-spacing: -0.03em; margin-bottom: 1.5rem; animation: fadeUp 0.6s 0.1s ease both; }
+    .hero h1 .line1 { display: block; color: var(--text); }
+    .hero h1 .line2 { display: block; color: transparent; -webkit-text-stroke: 1px rgba(226,232,240,0.25); }
+    .hero h1 .line3 { display: block; color: var(--accent); }
+    .hero-desc { max-width: 520px; font-size: 1.05rem; color: var(--muted); line-height: 1.7; margin-bottom: 3rem; animation: fadeUp 0.6s 0.2s ease both; }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; animation: fadeUp 0.6s 0.3s ease both; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--accent); color: #fff; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.9rem 2rem; text-decoration: none; border-radius: 2px; transition: background 0.2s, transform 0.2s; }
+    .btn-primary:hover { background: #c82a1f; transform: translateY(-2px); }
+    .btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; background: transparent; color: var(--text); border: 1px solid var(--border); font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.9rem 2rem; text-decoration: none; border-radius: 2px; transition: border-color 0.2s, transform 0.2s; }
+    .btn-secondary:hover { border-color: var(--blue); transform: translateY(-2px); }
+    .hero-visual { position: absolute; right: -60px; top: 50%; transform: translateY(-50%); width: 520px; opacity: 0.18; pointer-events: none; animation: fadeUp 1s 0.4s ease both; }
+    .stats { position: relative; z-index: 1; display: flex; gap: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--bg2); }
+    .stat { flex: 1; padding: 2rem 2.5rem; border-right: 1px solid var(--border); }
+    .stat:last-child { border-right: none; }
+    .stat-number { font-family: var(--mono); font-size: 2.2rem; font-weight: 700; color: var(--accent); display: block; margin-bottom: 0.3rem; }
+    .stat-label { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    section { position: relative; z-index: 1; }
+    .section-header { padding: 5rem 2.5rem 2rem; display: flex; align-items: baseline; gap: 1.5rem; }
+    .section-tag { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; white-space: nowrap; }
+    .section-title { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1px; background: var(--border); margin: 0 2.5rem 5rem; border: 1px solid var(--border); }
+    .card { background: var(--surface); padding: 2rem; display: flex; flex-direction: column; gap: 1rem; transition: background 0.2s; text-decoration: none; color: inherit; cursor: pointer; }
+    .card:hover { background: var(--bg2); }
+    .card-number { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
+    .card-icon { font-size: 2rem; line-height: 1; }
+    .card-title { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; }
+    .card-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; flex: 1; }
+    .card-tag { display: inline-block; font-family: var(--mono); font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.08em; width: fit-content; }
+    .tag-snmp { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .tag-agent { background: rgba(249,115,22,0.15); color: #fb923c; }
+    .tag-setup { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .tag-config { background: rgba(168,85,247,0.15); color: #c084fc; }
+    .terminal-section { padding: 0 2.5rem 5rem; }
+    .terminal { background: #080c18; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; max-width: 700px; }
+    .terminal-bar { background: var(--surface); padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border); }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #e8372a; } .dot-yellow { background: #f59e0b; } .dot-green { background: #22c55e; }
+    .terminal-label { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); margin-left: auto; }
+    .terminal-body { padding: 1.5rem; font-family: var(--mono); font-size: 0.8rem; line-height: 2; }
+    .t-prompt { color: #4ade80; } .t-cmd { color: var(--text); } .t-out { color: var(--muted); }
+    .t-ok { color: #4ade80; } .t-comment { color: #475569; }
+    .t-cursor { display: inline-block; width: 8px; height: 1em; background: var(--text); vertical-align: text-bottom; animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .infra-section { padding: 0 2.5rem 5rem; }
+    .infra-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); max-width: 900px; }
+    .infra-node { background: var(--surface); padding: 1.5rem; text-align: center; }
+    .infra-node-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .infra-node-name { font-family: var(--mono); font-size: 0.75rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .infra-node-ip { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); }
+    .infra-node-status { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.75rem; font-family: var(--mono); font-size: 0.6rem; color: #4ade80; }
+    .infra-node-status::before { content: ''; width: 5px; height: 5px; background: #4ade80; border-radius: 50%; }
+    footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 2rem 2.5rem; display: flex; justify-content: space-between; align-items: center; background: var(--bg2); }
+    .footer-left { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+    .footer-left span { color: var(--accent); }
+    .footer-right { display: flex; gap: 1.5rem; }
+    .footer-right a { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); text-decoration: none; text-transform: uppercase; letter-spacing: 0.08em; transition: color 0.2s; }
+    .footer-right a:hover { color: var(--text); }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero { padding: 6rem 1.5rem 3rem; }
+      .hero h1 { font-size: 3rem; }
+      .hero-visual { display: none; }
+      .stats { flex-direction: column; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .section-header { padding: 3rem 1.5rem 1.5rem; flex-direction: column; gap: 0.5rem; }
+      .cards { margin: 0 1.5rem 3rem; }
+      .terminal-section, .infra-section { padding: 0 1.5rem 3rem; }
+      .infra-grid { grid-template-columns: repeat(2, 1fr); }
+      footer { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="#" class="nav-logo"><span>//</span> ZabbixTuto</a>
+    <ul class="nav-links">
+      <li><a href="#tutoriels">Tutoriels</a></li>
+      <li><a href="#infra">Infrastructure</a></li>
+      <li><a href="#demarrer">Démarrer</a></li>
+      <li><a href="https://github.com/" target="_blank">GitHub →</a></li>
+    </ul>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-badge">BTS SIO — Supervision Réseau</div>
+    <h1>
+      <span class="line1">Superviser</span>
+      <span class="line2">son réseau</span>
+      <span class="line3">avec Zabbix.</span>
+    </h1>
+    <p class="hero-desc">Un guide complet pour intégrer pfSense et Hyper-V dans Zabbix. De la configuration SNMP à l'installation de l'agent, étape par étape.</p>
+    <div class="hero-actions">
+      <a href="#tutoriels" class="btn-primary">Commencer →</a>
+      <a href="https://github.com/" class="btn-secondary" target="_blank">⭐ GitHub</a>
+    </div>
+    <div class="hero-visual">
+      <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="200" cy="200" r="160" stroke="#3b82f6" stroke-width="1" stroke-dasharray="6 4"/>
+        <circle cx="200" cy="200" r="110" stroke="#e8372a" stroke-width="1" stroke-dasharray="4 6"/>
+        <circle cx="200" cy="200" r="60" stroke="#3b82f6" stroke-width="1"/>
+        <circle cx="200" cy="200" r="12" fill="#e8372a"/>
+        <line x1="200" y1="40" x2="200" y2="188" stroke="#3b82f6" stroke-width="1"/>
+        <line x1="360" y1="200" x2="212" y2="200" stroke="#e8372a" stroke-width="1"/>
+        <line x1="200" y1="360" x2="200" y2="212" stroke="#3b82f6" stroke-width="1"/>
+        <line x1="40" y1="200" x2="188" y2="200" stroke="#e8372a" stroke-width="1"/>
+        <circle cx="200" cy="40" r="8" fill="#3b82f6"/>
+        <circle cx="360" cy="200" r="8" fill="#e8372a"/>
+        <circle cx="200" cy="360" r="8" fill="#3b82f6"/>
+        <circle cx="40" cy="200" r="8" fill="#e8372a"/>
+        <circle cx="313" cy="87" r="6" fill="#f97316"/>
+        <circle cx="87" cy="313" r="6" fill="#f97316"/>
+        <line x1="313" y1="87" x2="207" y2="193" stroke="#f97316" stroke-width="1" stroke-dasharray="3 3"/>
+        <line x1="87" y1="313" x2="193" y2="207" stroke="#f97316" stroke-width="1" stroke-dasharray="3 3"/>
+      </svg>
+    </div>
+  </section>
+
+  <div class="stats reveal">
+    <div class="stat"><span class="stat-number">02</span><span class="stat-label">Équipements intégrés</span></div>
+    <div class="stat"><span class="stat-number">SNMP</span><span class="stat-label">Protocole pfSense</span></div>
+    <div class="stat"><span class="stat-number">ZBX</span><span class="stat-label">Agent Hyper-V</span></div>
+    <div class="stat"><span class="stat-number">7.0</span><span class="stat-label">Version Zabbix LTS</span></div>
+  </div>
+
+  <section id="tutoriels">
+    <div class="section-header reveal">
+      <span class="section-tag">// 01</span>
+      <h2 class="section-title">Tutoriels</h2>
+    </div>
+    <div class="cards reveal">
+      <a class="card" href="#">
+        <span class="card-number">001</span>
+        <div class="card-icon">🖥️</div>
+        <div class="card-title">Serveur Zabbix</div>
+        <div class="card-desc">Installation et configuration du serveur de supervision Zabbix dans un environnement virtualisé Hyper-V.</div>
+        <span class="card-tag tag-setup">Setup</span>
+      </a>
+      <a class="card" href="#">
+        <span class="card-number">002</span>
+        <div class="card-icon">🔥</div>
+        <div class="card-title">Intégration pfSense</div>
+        <div class="card-desc">Supervision du pare-feu pfSense via SNMP v2c. Configuration de la community string et ajout du template dans Zabbix.</div>
+        <span class="card-tag tag-snmp">SNMP</span>
+      </a>
+      <a class="card" href="#">
+        <span class="card-number">003</span>
+        <div class="card-icon">⚡</div>
+        <div class="card-title">Intégration Hyper-V</div>
+        <div class="card-desc">Installation de l'agent Zabbix sur Hyper-V Server standalone. Métriques CPU, RAM, disque et services Windows.</div>
+        <span class="card-tag tag-agent">Agent</span>
+      </a>
+      <a class="card" href="#">
+        <span class="card-number">004</span>
+        <div class="card-icon">📊</div>
+        <div class="card-title">Tableaux de bord</div>
+        <div class="card-desc">Création de dashboards Zabbix pour visualiser l'état de l'infrastructure en temps réel.</div>
+        <span class="card-tag tag-config">Config</span>
+      </a>
+    </div>
+  </section>
+
+  <section id="demarrer">
+    <div class="section-header reveal">
+      <span class="section-tag">// 02</span>
+      <h2 class="section-title">Démarrer</h2>
+    </div>
+    <div class="terminal-section reveal">
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <span class="terminal-label">zabbix@192.168.2.18 — bash</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-comment"># Tester la communication SNMP avec pfSense</span></div>
+          <div><span class="t-prompt">zabbix@srv:~$</span> <span class="t-cmd">snmpwalk -v2c -c public 192.168.2.1</span></div>
+          <div><span class="t-out">iso.3.6.1.2.1.1.1.0 = STRING: "pfSense 2.7.2-RELEASE"</span></div>
+          <div><span class="t-out">iso.3.6.1.2.1.1.5.0 = STRING: "pfSense.home.arpa"</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-comment"># Tester l'agent Zabbix sur Hyper-V</span></div>
+          <div><span class="t-prompt">zabbix@srv:~$</span> <span class="t-cmd">zabbix_get -s 192.168.2.11 -p 10050 -k agent.ping</span></div>
+          <div><span class="t-ok">1</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-prompt">zabbix@srv:~$</span> <span class="t-cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="infra">
+    <div class="section-header reveal">
+      <span class="section-tag">// 03</span>
+      <h2 class="section-title">Infrastructure</h2>
+    </div>
+    <div class="infra-section reveal">
+      <div class="infra-grid">
+        <div class="infra-node">
+          <div class="infra-node-icon">🖥️</div>
+          <div class="infra-node-name">Zabbix Server</div>
+          <div class="infra-node-ip">192.168.2.18</div>
+          <div class="infra-node-status">En ligne</div>
+        </div>
+        <div class="infra-node">
+          <div class="infra-node-icon">🔥</div>
+          <div class="infra-node-name">pfSense</div>
+          <div class="infra-node-ip">192.168.2.1</div>
+          <div class="infra-node-status">SNMP</div>
+        </div>
+        <div class="infra-node">
+          <div class="infra-node-icon">⚡</div>
+          <div class="infra-node-name">Hyper-V</div>
+          <div class="infra-node-ip">192.168.2.11</div>
+          <div class="infra-node-status">Agent ZBX</div>
+        </div>
+        <div class="infra-node">
+          <div class="infra-node-icon">🐧</div>
+          <div class="infra-node-name">VM Debian</div>
+          <div class="infra-node-ip">192.168.2.20</div>
+          <div class="infra-node-status">Agent ZBX</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-left"><span>//</span> ZabbixTuto — BTS SIO 2026</div>
+    <div class="footer-right">
+      <a href="https://github.com/" target="_blank">GitHub</a>
+      <a href="https://www.zabbix.com/documentation" target="_blank">Docs Zabbix</a>
+    </div>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
