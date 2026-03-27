@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stratégies de groupe (GPO) — ZabbixTuto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0e1a; --bg2: #0f1526; --surface: #141c30; --border: #1e2d4a;
+    --accent: #e8372a; --blue: #3b82f6; --green: #22c55e; --orange: #f97316;
+    --text: #e2e8f0; --muted: #64748b;
+    --mono: 'Space Mono', monospace; --sans: 'Syne', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none; z-index: 0;
+  }
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 2.5rem;
+    background: rgba(10,14,26,0.9); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: var(--text); text-decoration: none; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+  .nav-links > li { position: relative; }
+  .nav-links a { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s; padding: 0.5rem 0; display: block; }
+  .nav-links a:hover { color: var(--text); }
+  .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; background: var(--bg2); border: 1px solid var(--border); min-width: 280px; list-style: none; z-index: 200; padding: 0.5rem 0; max-height: 80vh; overflow-y: auto; }
+  .dropdown:hover .dropdown-menu { display: block; }
+  .dropdown-menu li a { padding: 0.6rem 1.2rem; font-size: 0.7rem; color: var(--muted); display: block; text-decoration: none; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; transition: background 0.15s, color 0.15s; }
+  .dropdown-menu li a:hover { background: var(--surface); color: var(--text); }
+  .dm-label { padding: 0.4rem 1.2rem; font-size: 0.6rem; color: var(--accent); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.15em; }
+  .dm-sep { border-top: 1px solid var(--border); margin: 0.4rem 0; }
+  .nav-burger { display: none; background: none; border: 1px solid var(--border); color: var(--text); padding: 0.4rem 0.8rem; cursor: pointer; font-size: 1rem; }
+  .mobile-menu { display: none; position: fixed; top: 60px; left: 0; right: 0; background: var(--bg2); border-bottom: 1px solid var(--border); z-index: 99; padding: 1rem; max-height: calc(100vh - 60px); overflow-y: auto; }
+  .mobile-menu.open { display: block; }
+  .mobile-menu a { display: block; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-decoration: none; padding: 0.6rem 0; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.08em; }
+  .mobile-menu a:last-child { border-bottom: none; }
+  .mobile-menu .m-label { font-family: var(--mono); font-size: 0.6rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; padding: 0.75rem 0 0.2rem; }
+  .page-layout { display: flex; padding-top: 60px; min-height: 100vh; position: relative; z-index: 1; }
+  .sidebar { width: 260px; flex-shrink: 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; border-right: 1px solid var(--border); background: var(--bg2); padding: 2rem 0; }
+  .sidebar-title { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15em; padding: 0 1.5rem; margin-bottom: 1rem; }
+  .sidebar-nav { list-style: none; }
+  .sidebar-nav li a { display: flex; align-items: center; gap: 0.75rem; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-decoration: none; padding: 0.6rem 1.5rem; border-left: 2px solid transparent; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.06em; }
+  .sidebar-nav li a:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .sidebar-nav li a.active { color: var(--text); border-left-color: var(--accent); background: rgba(232,55,42,0.06); }
+  .sidebar-nav li a .step-num { color: var(--accent); font-size: 0.6rem; flex-shrink: 0; }
+  .sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 1rem 1.5rem; }
+  .main-content { flex: 1; max-width: 820px; padding: 3rem 3.5rem; }
+  .chapter-header { margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+  .chapter-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .chapter-num { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; }
+  .chapter-tag { font-family: var(--mono); font-size: 0.65rem; padding: 0.2rem 0.7rem; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .tag-ad { background: rgba(139,92,246,0.15); color: #a78bfa; }
+  .tag-gui { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .chapter-title { font-size: 2.8rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; margin-bottom: 1rem; }
+  .chapter-desc { font-size: 1rem; color: var(--muted); line-height: 1.7; max-width: 580px; }
+  .step { margin-bottom: 3rem; }
+  .step-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+  .step-badge { width: 32px; height: 32px; background: var(--accent); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.75rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .step-title { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; }
+  p { color: #94a3b8; line-height: 1.75; margin-bottom: 1rem; font-size: 0.95rem; }
+  ol, ul.list { color: #94a3b8; padding-left: 1.5rem; margin-bottom: 1rem; }
+  ol li, ul.list li { margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.7; padding-left: 0.4rem; }
+  ol li strong, ul.list li strong { color: var(--text); }
+  .nav-path { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--surface); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 2px; margin: 0.75rem 0 1.25rem; font-family: var(--mono); font-size: 0.75rem; color: var(--muted); flex-wrap: wrap; }
+  .nav-path span { color: var(--accent); }
+  .nav-path .arrow { color: var(--border); }
+  .info-box { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.25); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.75rem; }
+  .info-box .icon { flex-shrink: 0; font-size: 1rem; margin-top: 0.1rem; }
+  .info-box p { color: #93c5fd; margin: 0; font-size: 0.85rem; }
+  .warn-box { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.75rem; }
+  .warn-box .icon { flex-shrink: 0; }
+  .warn-box p { color: #fbbf24; margin: 0; font-size: 0.85rem; }
+  .success-box { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.75rem; }
+  .success-box .icon { flex-shrink: 0; }
+  .success-box p { color: #4ade80; margin: 0; font-size: 0.85rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.85rem; }
+  th { background: var(--surface); font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 0.75rem 1rem; text-align: left; border: 1px solid var(--border); }
+  td { padding: 0.75rem 1rem; border: 1px solid var(--border); color: #94a3b8; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  td code { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); background: rgba(232,55,42,0.1); padding: 0.1rem 0.4rem; border-radius: 2px; }
+  .pagination { display: flex; justify-content: space-between; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+  .page-btn { display: flex; flex-direction: column; gap: 0.3rem; text-decoration: none; padding: 1rem 1.5rem; border: 1px solid var(--border); border-radius: 2px; transition: border-color 0.2s, background 0.2s; max-width: 240px; }
+  .page-btn:hover { border-color: var(--accent); background: rgba(232,55,42,0.05); }
+  .page-btn-dir { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .page-btn-title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+  .page-btn.next { text-align: right; margin-left: auto; }
+  footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 1.5rem 2.5rem; display: flex; justify-content: space-between; align-items: center; background: var(--bg2); margin-top: 4rem; }
+  .footer-left { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+  .footer-left span { color: var(--accent); }
+  .footer-right { display: flex; gap: 1.5rem; }
+  .footer-right a { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); text-decoration: none; text-transform: uppercase; letter-spacing: 0.08em; transition: color 0.2s; }
+  .footer-right a:hover { color: var(--text); }
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main-content { padding: 2rem 1.5rem; }
+    .chapter-title { font-size: 2rem; }
+    .nav-links { display: none; }
+    .nav-burger { display: block; }
+  }
+</style>
+</head>
+<body>
+  
+  <nav>
+    <a href="index.html" class="nav-logo"><span>//</span> ZabbixTuto</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li class="dropdown">
+        <a href="#">Tutoriels ▾</a>
+        <ul class="dropdown-menu">
+          <li class="dm-label">Supervision Zabbix</li>
+          <li><a href="zabbix-server.html">01 — Serveur Zabbix</a></li>
+          <li><a href="pfsense.html">02 — Intégration pfSense</a></li>
+          <li><a href="hyperv.html">03 — Intégration Hyper-V</a></li>
+          <li><a href="dashboard.html">04 — Tableaux de bord</a></li>
+          <li class="dm-sep"></li>
+          <li class="dm-label">Hyper-V</li>
+          <li><a href="hyperv-prise-en-main.html">05 — Prise en main Hyper-V</a></li>
+          <li><a href="hyperv-vms.html">06 — Création de VMs</a></li>
+          <li class="dm-sep"></li>
+          <li class="dm-label">Installations</li>
+          <li><a href="install-windows-server.html">07 — Windows Server 2025</a></li>
+          <li><a href="install-windows-client.html">08 — Windows 10/11</a></li>
+          <li><a href="install-debian.html">09 — Debian Linux</a></li>
+          <li><a href="install-pfsense.html">10 — pfSense 2.7</a></li>
+          <li class="dm-sep"></li>
+          <li class="dm-label">Active Directory</li>
+          <li><a href="ad-installation.html">11 — Installation AD DS</a></li>
+          <li><a href="ad-utilisateurs.html">12 — Utilisateurs AD</a></li>
+          <li><a href="ad-ou.html">13 — Unités d'organisation</a></li>
+          <li><a href="ad-gpo.html">14 — Stratégies GPO</a></li>
+          <li><a href="ad-jonction.html">15 — Jonction au domaine</a></li>
+        </ul>
+      </li>
+      <li><a href="https://github.com/" target="_blank">GitHub →</a></li>
+    </ul>
+    <button class="nav-burger" onclick="toggleMenu()">☰</button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html">Accueil</a>
+    <div class="m-label">Supervision Zabbix</div>
+    <a href="zabbix-server.html">01 — Serveur Zabbix</a>
+    <a href="pfsense.html">02 — Intégration pfSense</a>
+    <a href="hyperv.html">03 — Intégration Hyper-V</a>
+    <a href="dashboard.html">04 — Tableaux de bord</a>
+    <div class="m-label">Hyper-V</div>
+    <a href="hyperv-prise-en-main.html">05 — Prise en main Hyper-V</a>
+    <a href="hyperv-vms.html">06 — Création de VMs</a>
+    <div class="m-label">Installations</div>
+    <a href="install-windows-server.html">07 — Windows Server 2025</a>
+    <a href="install-windows-client.html">08 — Windows 10/11</a>
+    <a href="install-debian.html">09 — Debian Linux</a>
+    <a href="install-pfsense.html">10 — pfSense 2.7</a>
+    <div class="m-label">Active Directory</div>
+    <a href="ad-installation.html">11 — Installation AD DS</a>
+    <a href="ad-utilisateurs.html">12 — Utilisateurs AD</a>
+    <a href="ad-ou.html">13 — Unités d'organisation</a>
+    <a href="ad-gpo.html">14 — Stratégies GPO</a>
+    <a href="ad-jonction.html">15 — Jonction au domaine</a>
+    <a href="https://github.com/" target="_blank">GitHub →</a>
+  </div>
+
+  
+<div class="page-layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Sommaire</div>
+    <ul class="sidebar-nav">
+      <li><a href="#intro" class="active"><span class="step-num">01</span> Introduction</a></li>
+      <li><a href="#creer-gpo"><span class="step-num">02</span> Créer une GPO</a></li>
+      <li><a href="#gpo-securite"><span class="step-num">03</span> GPO Sécurité</a></li>
+      <li><a href="#gpo-bureau"><span class="step-num">04</span> GPO Bureau</a></li>
+      <li><a href="#gpo-restriction"><span class="step-num">05</span> GPO Restriction</a></li>
+      <li><a href="#appliquer"><span class="step-num">06</span> Appliquer & tester</a></li>
+    </ul>
+    <hr class="sidebar-divider"/>
+    <ul class="sidebar-nav">
+      <li><a href="ad-ou.html">← Unités d'organisation</a></li>
+      <li><a href="ad-jonction.html">→ Jonction au domaine</a></li>
+    </ul>
+  </aside>
+  <main class="main-content">
+    <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="chapter-num">Chapitre 14</span>
+        <span class="chapter-tag tag-ad">Active Directory</span>
+        <span class="chapter-tag tag-gui">GUI</span>
+      </div>
+      <h1 class="chapter-title">Stratégies GPO</h1>
+      <p class="chapter-desc">Création et application de stratégies de groupe (GPO) pour la sécurité, la personnalisation du bureau et la restriction des logiciels.</p>
+    </div>
+
+    <div class="step" id="intro">
+      <div class="step-header"><div class="step-badge">01</div><h2 class="step-title">Introduction</h2></div>
+      <p>Les stratégies de groupe (GPO — Group Policy Objects) permettent d'appliquer automatiquement des configurations à des utilisateurs ou des ordinateurs d'une OU. Elles sont gérées via la console GPMC.</p>
+      <p>Ouvrir la console GPMC :</p>
+      <div class="nav-path"><span>Gestionnaire de serveur</span><span class="arrow">→</span><span>Outils</span><span class="arrow">→</span><strong style="color:var(--text)">Gestion des stratégies de groupe</strong></div>
+      <table>
+        <tr><th>Type de GPO</th><th>S'applique à</th><th>Exemples</th></tr>
+        <tr><td>Configuration ordinateur</td><td>L'ordinateur au démarrage</td><td>Pare-feu, scripts de démarrage, installation logiciels</td></tr>
+        <tr><td>Configuration utilisateur</td><td>L'utilisateur à la connexion</td><td>Fond d'écran, restrictions, lecteurs réseau</td></tr>
+      </table>
+      <div class="info-box"><span class="icon">ℹ️</span><p>L'ordre d'application des GPO est : <strong>Local → Site → Domaine → OU parente → OU enfant</strong>. Une GPO d'OU enfant écrase une GPO de domaine en cas de conflit.</p></div>
+    </div>
+
+    <div class="step" id="creer-gpo">
+      <div class="step-header"><div class="step-badge">02</div><h2 class="step-title">Créer et lier une GPO</h2></div>
+      <p>Dans la console GPMC, faire un clic droit sur l'OU cible :</p>
+      <div class="nav-path"><span>DOMAINE.PAULR</span><span class="arrow">→</span><span>OU cible</span><span class="arrow">→</span><span>Clic droit</span><span class="arrow">→</span><strong style="color:var(--text)">Créer un objet GPO dans ce domaine, et le lier ici</strong></div>
+      <ol>
+        <li>Donner un nom explicite à la GPO (ex: <code>GPO_Securite_Postes</code>)</li>
+        <li>Cliquer <strong>OK</strong> — la GPO apparaît liée à l'OU</li>
+        <li>Faire un clic droit sur la GPO → <strong>Modifier</strong> pour ouvrir l'éditeur</li>
+      </ol>
+      <div class="info-box"><span class="icon">ℹ️</span><p>Nommer les GPO de façon explicite facilite la maintenance : <code>GPO_Securite_Postes</code>, <code>GPO_Bureau_Utilisateurs</code>, <code>GPO_Restriction_Logiciels</code>.</p></div>
+    </div>
+
+    <div class="step" id="gpo-securite">
+      <div class="step-header"><div class="step-badge">03</div><h2 class="step-title">GPO de sécurité</h2></div>
+      <p>Créer une GPO <code>GPO_Securite_Postes</code> liée à l'OU <code>OrdinateursPostes</code>. Dans l'éditeur de stratégie :</p>
+      <p><strong>Politique de mot de passe :</strong></p>
+      <div class="nav-path"><span>Configuration ordinateur</span><span class="arrow">→</span><span>Paramètres Windows</span><span class="arrow">→</span><span>Paramètres de sécurité</span><span class="arrow">→</span><span>Stratégies de comptes</span><span class="arrow">→</span><strong style="color:var(--text)">Stratégie de mot de passe</strong></div>
+      <table>
+        <tr><th>Paramètre</th><th>Valeur recommandée</th></tr>
+        <tr><td>Longueur minimale du mot de passe</td><td>12 caractères</td></tr>
+        <tr><td>Le mot de passe doit respecter des exigences de complexité</td><td>Activé</td></tr>
+        <tr><td>Durée de vie maximale du mot de passe</td><td>90 jours</td></tr>
+        <tr><td>Conserver l'historique des mots de passe</td><td>10 mots de passe</td></tr>
+      </table>
+      <p><strong>Verrouillage de compte :</strong></p>
+      <div class="nav-path"><span>Configuration ordinateur</span><span class="arrow">→</span><span>Paramètres Windows</span><span class="arrow">→</span><span>Paramètres de sécurité</span><span class="arrow">→</span><span>Stratégies de comptes</span><span class="arrow">→</span><strong style="color:var(--text)">Stratégie de verrouillage du compte</strong></div>
+      <table>
+        <tr><th>Paramètre</th><th>Valeur recommandée</th></tr>
+        <tr><td>Seuil de verrouillage du compte</td><td>5 tentatives</td></tr>
+        <tr><td>Durée de verrouillage du compte</td><td>30 minutes</td></tr>
+        <tr><td>Réinitialiser le compteur après</td><td>30 minutes</td></tr>
+      </table>
+      <p><strong>Pare-feu Windows :</strong></p>
+      <div class="nav-path"><span>Configuration ordinateur</span><span class="arrow">→</span><span>Paramètres Windows</span><span class="arrow">→</span><span>Paramètres de sécurité</span><span class="arrow">→</span><strong style="color:var(--text)">Pare-feu Windows Defender avec sécurité avancée</strong></div>
+      <table>
+        <tr><th>Profil</th><th>État recommandé</th></tr>
+        <tr><td>Profil Domaine</td><td>Activé — Connexions entrantes : Bloquer (par défaut)</td></tr>
+        <tr><td>Profil Privé</td><td>Activé — Connexions entrantes : Bloquer (par défaut)</td></tr>
+        <tr><td>Profil Public</td><td>Activé — Connexions entrantes : Bloquer (par défaut)</td></tr>
+      </table>
+    </div>
+
+    <div class="step" id="gpo-bureau">
+      <div class="step-header"><div class="step-badge">04</div><h2 class="step-title">GPO de bureau</h2></div>
+      <p>Créer une GPO <code>GPO_Bureau_Utilisateurs</code> liée à l'OU <code>Utilisateurs</code>. Dans l'éditeur :</p>
+      <p><strong>Fond d'écran personnalisé :</strong></p>
+      <div class="nav-path"><span>Configuration utilisateur</span><span class="arrow">→</span><span>Modèles d'administration</span><span class="arrow">→</span><span>Bureau</span><span class="arrow">→</span><strong style="color:var(--text)">Bureau</strong></div>
+      <table>
+        <tr><th>Paramètre</th><th>Valeur</th></tr>
+        <tr><td>Papier peint du bureau</td><td>Activé</td></tr>
+        <tr><td>Nom du papier peint</td><td>Chemin UNC vers l'image (ex: <code>\\SRV-2025\Partage\fond.jpg</code>)</td></tr>
+        <tr><td>Style du papier peint</td><td>Étirer / Remplir</td></tr>
+      </table>
+      <p><strong>Désactiver le panneau de configuration :</strong></p>
+      <div class="nav-path"><span>Configuration utilisateur</span><span class="arrow">→</span><span>Modèles d'administration</span><span class="arrow">→</span><strong style="color:var(--text)">Panneau de configuration</strong></div>
+      <table>
+        <tr><th>Paramètre</th><th>Valeur</th></tr>
+        <tr><td>Interdire l'accès au panneau de configuration et aux paramètres du PC</td><td>Activé</td></tr>
+      </table>
+      <p><strong>Redirection de dossiers (Documents vers le serveur) :</strong></p>
+      <div class="nav-path"><span>Configuration utilisateur</span><span class="arrow">→</span><span>Paramètres Windows</span><span class="arrow">→</span><span>Redirection de dossiers</span><span class="arrow">→</span><span>Documents</span><span class="arrow">→</span><span>Clic droit</span><span class="arrow">→</span><strong style="color:var(--text)">Propriétés</strong></div>
+      <table>
+        <tr><th>Paramètre</th><th>Valeur</th></tr>
+        <tr><td>Paramètre</td><td>De base — Rediriger le dossier de tout le monde vers le même emplacement</td></tr>
+        <tr><td>Emplacement du dossier cible</td><td><code>\\SRV-2025\Profils\%username%\Documents</code></td></tr>
+      </table>
+    </div>
+
+    <div class="step" id="gpo-restriction">
+      <div class="step-header"><div class="step-badge">05</div><h2 class="step-title">GPO de restriction logiciel</h2></div>
+      <p>Créer une GPO <code>GPO_Restriction_Logiciels</code> liée à l'OU <code>Utilisateurs</code>. Dans l'éditeur :</p>
+      <div class="nav-path"><span>Configuration utilisateur</span><span class="arrow">→</span><span>Paramètres Windows</span><span class="arrow">→</span><span>Paramètres de sécurité</span><span class="arrow">→</span><strong style="color:var(--text)">Stratégies de restriction logicielle</strong></div>
+      <ol>
+        <li>Faire un clic droit sur <strong>"Stratégies de restriction logicielle"</strong> → <strong>"Nouvelles stratégies de restriction logicielle"</strong></li>
+        <li>Double-cliquer sur <strong>"Niveau de sécurité par défaut"</strong> → le niveau est <strong>"Non restreint"</strong> par défaut</li>
+        <li>Pour bloquer des applications spécifiques, aller dans <strong>"Règles supplémentaires"</strong> → <strong>"Nouvelle règle de hachage"</strong> ou <strong>"Nouvelle règle de chemin"</strong></li>
+      </ol>
+      <table>
+        <tr><th>Type de règle</th><th>Description</th><th>Exemple</th></tr>
+        <tr><td>Règle de chemin</td><td>Bloquer/autoriser selon l'emplacement du fichier</td><td>Bloquer <code>C:\Games\*</code></td></tr>
+        <tr><td>Règle de hachage</td><td>Identifier un exécutable précis par son empreinte</td><td>Bloquer une version précise d'un logiciel</td></tr>
+        <tr><td>Règle de zone réseau</td><td>Restreindre selon la zone Internet Explorer</td><td>Bloquer les exécutables de la zone Internet</td></tr>
+      </table>
+      <div class="warn-box"><span class="icon">⚠️</span><p>Tester les GPO de restriction sur un petit groupe d'utilisateurs avant de les déployer à grande échelle. Une restriction mal configurée peut empêcher le démarrage de Windows.</p></div>
+    </div>
+
+    <div class="step" id="appliquer">
+      <div class="step-header"><div class="step-badge">06</div><h2 class="step-title">Appliquer et tester les GPO</h2></div>
+      <p>Les GPO s'appliquent automatiquement toutes les 90 minutes sur les postes clients. Pour forcer l'application immédiate depuis le poste client :</p>
+      <div class="nav-path"><span>Invite de commandes (Admin)</span><span class="arrow">→</span><strong style="color:var(--text)">gpupdate /force</strong></div>
+      <table>
+        <tr><th>Commande</th><th>Description</th></tr>
+        <tr><td><code>gpupdate /force</code></td><td>Force le rafraîchissement immédiat de toutes les GPO</td></tr>
+        <tr><td><code>gpresult /r</code></td><td>Affiche les GPO appliquées à l'utilisateur et l'ordinateur courants</td></tr>
+        <tr><td><code>gpresult /h rapport.html</code></td><td>Génère un rapport HTML détaillé des GPO appliquées</td></tr>
+      </table>
+      <p>Depuis la console GPMC sur le serveur, utiliser l'outil <strong>Résultats de stratégie de groupe</strong> :</p>
+      <div class="nav-path"><span>GPMC</span><span class="arrow">→</span><span>Résultats de stratégie de groupe</span><span class="arrow">→</span><span>Clic droit</span><span class="arrow">→</span><strong style="color:var(--text)">Assistant Résultats de stratégie de groupe</strong></div>
+      <div class="success-box"><span class="icon">✅</span><p>Les GPO sont créées et liées aux OU. Elles s'appliqueront automatiquement aux utilisateurs et ordinateurs lors de leur prochaine connexion ou au prochain rafraîchissement.</p></div>
+    </div>
+
+    <div class="pagination">
+      <a href="ad-ou.html" class="page-btn">
+        <span class="page-btn-dir">← Précédent</span>
+        <span class="page-btn-title">Unités d'organisation</span>
+      </a>
+      <a href="ad-jonction.html" class="page-btn next">
+        <span class="page-btn-dir">Suivant →</span>
+        <span class="page-btn-title">Jonction au domaine</span>
+      </a>
+    </div>
+  </main>
+</div>
+  
+  <footer>
+    <div class="footer-left"><span>//</span> ZabbixTuto — BTS SIO 2026</div>
+    <div class="footer-right">
+      <a href="https://github.com/" target="_blank">GitHub</a>
+      <a href="https://www.zabbix.com/documentation" target="_blank">Docs Zabbix</a>
+    </div>
+  </footer>
+
+  <script>
+  function toggleMenu() { document.getElementById('mobileMenu').classList.toggle('open'); }
+  const steps = document.querySelectorAll('.step[id]');
+  const sideLinks = document.querySelectorAll('.sidebar-nav a[href^="#"]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        sideLinks.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector('.sidebar-nav a[href="#' + e.target.id + '"]');
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+  steps.forEach(s => observer.observe(s));
+  document.querySelectorAll('.code-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.closest('.code-block').querySelector('.code-body').innerText;
+      navigator.clipboard.writeText(code);
+      btn.textContent = 'Copié !';
+      setTimeout(() => btn.textContent = 'Copier', 1500);
+    });
+  });
+</script>
+</body>
+</html>
