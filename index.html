@@ -134,10 +134,28 @@
       <li class="dropdown">
         <a href="#">Tutoriels ▾</a>
         <ul class="dropdown-menu">
+          <li style="padding:0.4rem 1.2rem;font-size:0.6rem;color:#e8372a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;">Supervision Zabbix</li>
           <li><a href="zabbix-server.html">01 — Serveur Zabbix</a></li>
           <li><a href="pfsense.html">02 — Intégration pfSense</a></li>
           <li><a href="hyperv.html">03 — Intégration Hyper-V</a></li>
           <li><a href="dashboard.html">04 — Tableaux de bord</a></li>
+          <li style="border-top:1px solid #1e2d4a;margin:0.4rem 0;"></li>
+          <li style="padding:0.4rem 1.2rem;font-size:0.6rem;color:#e8372a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;">Hyper-V</li>
+          <li><a href="hyperv-prise-en-main.html">05 — Prise en main Hyper-V</a></li>
+          <li><a href="hyperv-vms.html">06 — Création de VMs</a></li>
+          <li style="border-top:1px solid #1e2d4a;margin:0.4rem 0;"></li>
+          <li style="padding:0.4rem 1.2rem;font-size:0.6rem;color:#e8372a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;">Installations</li>
+          <li><a href="install-windows-server.html">07 — Windows Server 2025</a></li>
+          <li><a href="install-windows-client.html">08 — Windows 10/11</a></li>
+          <li><a href="install-debian.html">09 — Debian Linux</a></li>
+          <li><a href="install-pfsense.html">10 — pfSense 2.7</a></li>
+          <li style="border-top:1px solid #1e2d4a;margin:0.4rem 0;"></li>
+          <li style="padding:0.4rem 1.2rem;font-size:0.6rem;color:#e8372a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;">Active Directory</li>
+          <li><a href="ad-installation.html">11 — Installation AD DS</a></li>
+          <li><a href="ad-utilisateurs.html">12 — Utilisateurs AD</a></li>
+          <li><a href="ad-ou.html">13 — Unités d'organisation</a></li>
+          <li><a href="ad-gpo.html">14 — Stratégies GPO</a></li>
+          <li><a href="ad-jonction.html">15 — Jonction au domaine</a></li>
         </ul>
       </li>
       <li><a href="#demarrer">Démarrer</a></li>
@@ -180,7 +198,7 @@
   </section>
 
   <div class="stats reveal">
-    <div class="stat"><span class="stat-number">02</span><span class="stat-label">Équipements intégrés</span></div>
+    <div class="stat"><span class="stat-number">15</span><span class="stat-label">Chapitres</span></div>
     <div class="stat"><span class="stat-number">SNMP</span><span class="stat-label">Protocole pfSense</span></div>
     <div class="stat"><span class="stat-number">ZBX</span><span class="stat-label">Agent Hyper-V</span></div>
     <div class="stat"><span class="stat-number">7.0</span><span class="stat-label">Version Zabbix LTS</span></div>
@@ -213,12 +231,89 @@
         <div class="card-desc">Installation de l'agent Zabbix sur Hyper-V Server standalone. Métriques CPU, RAM, disque et services Windows.</div>
         <span class="card-tag tag-agent">Agent</span>
       </a>
-      <a class="card" href="dashboard.html">
+      <a class="card" href="hyperv-prise-en-main.html">
         <span class="card-number">004</span>
+        <div class="card-icon">🖥️</div>
+        <div class="card-title">Prise en main Hyper-V</div>
+        <div class="card-desc">Présentation, installation, interface du gestionnaire et configuration des commutateurs virtuels.</div>
+        <span class="card-tag tag-hyperv" style="background:rgba(59,130,246,0.15);color:#60a5fa">Hyper-V</span>
+      </a>
+      <a class="card" href="hyperv-vms.html">
+        <span class="card-number">005</span>
+        <div class="card-icon">💻</div>
+        <div class="card-title">Création de VMs</div>
+        <div class="card-desc">Création d'une VM Windows et d'une VM Debian Linux sur Hyper-V, avec bonnes pratiques.</div>
+        <span class="card-tag tag-vm" style="background:rgba(168,85,247,0.15);color:#c084fc">VM</span>
+      </a>
+      <a class="card" href="dashboard.html">
+        <span class="card-number">006</span>
         <div class="card-icon">📊</div>
         <div class="card-title">Tableaux de bord</div>
         <div class="card-desc">Création de dashboards Zabbix pour visualiser l'état de l'infrastructure en temps réel.</div>
         <span class="card-tag tag-config">Config</span>
+      </a>
+      <a class="card" href="install-windows-server.html">
+        <span class="card-number">007</span>
+        <div class="card-icon">🪟</div>
+        <div class="card-title">Windows Server 2025</div>
+        <div class="card-desc">Installation complète de Windows Server 2025 : partitionnement, IP statique, rôles et sécurité.</div>
+        <span class="card-tag" style="background:rgba(59,130,246,0.15);color:#60a5fa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">Windows</span>
+      </a>
+      <a class="card" href="install-windows-client.html">
+        <span class="card-number">008</span>
+        <div class="card-icon">💻</div>
+        <div class="card-title">Windows 10/11</div>
+        <div class="card-desc">Installation de Windows 10/11 Pro dans une VM Hyper-V avec configuration réseau et sécurité.</div>
+        <span class="card-tag" style="background:rgba(59,130,246,0.15);color:#60a5fa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">Windows</span>
+      </a>
+      <a class="card" href="install-debian.html">
+        <span class="card-number">009</span>
+        <div class="card-icon">🐧</div>
+        <div class="card-title">Debian Linux</div>
+        <div class="card-desc">Installation de Debian 12, partitionnement, IP statique, fail2ban et sécurisation SSH.</div>
+        <span class="card-tag" style="background:rgba(34,197,94,0.15);color:#4ade80;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">Linux</span>
+      </a>
+      <a class="card" href="install-pfsense.html">
+        <span class="card-number">010</span>
+        <div class="card-icon">🔥</div>
+        <div class="card-title">pfSense 2.7</div>
+        <div class="card-desc">Installation de pfSense 2.7 : interfaces WAN/LAN, wizard web, DHCP et sécurité de base.</div>
+        <span class="card-tag" style="background:rgba(249,115,22,0.15);color:#fb923c;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">pfSense</span>
+      </a>
+      <a class="card" href="ad-installation.html">
+        <span class="card-number">011</span>
+        <div class="card-icon">🏢</div>
+        <div class="card-title">Installation AD DS</div>
+        <div class="card-desc">Installation du rôle Active Directory et promotion du serveur en contrôleur de domaine.</div>
+        <span class="card-tag" style="background:rgba(139,92,246,0.15);color:#a78bfa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">AD DS</span>
+      </a>
+      <a class="card" href="ad-utilisateurs.html">
+        <span class="card-number">012</span>
+        <div class="card-icon">👤</div>
+        <div class="card-title">Utilisateurs AD</div>
+        <div class="card-desc">Création et gestion des comptes utilisateurs et groupes dans Active Directory via ADUC.</div>
+        <span class="card-tag" style="background:rgba(139,92,246,0.15);color:#a78bfa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">AD DS</span>
+      </a>
+      <a class="card" href="ad-ou.html">
+        <span class="card-number">013</span>
+        <div class="card-icon">📁</div>
+        <div class="card-title">Unités d'organisation</div>
+        <div class="card-desc">Création d'OU pour structurer l'annuaire AD et cibler l'application des GPO par département.</div>
+        <span class="card-tag" style="background:rgba(139,92,246,0.15);color:#a78bfa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">AD DS</span>
+      </a>
+      <a class="card" href="ad-gpo.html">
+        <span class="card-number">014</span>
+        <div class="card-icon">🔐</div>
+        <div class="card-title">Stratégies GPO</div>
+        <div class="card-desc">Création de GPO de sécurité, de bureau et de restriction logiciel via la console GPMC.</div>
+        <span class="card-tag" style="background:rgba(139,92,246,0.15);color:#a78bfa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">GPO</span>
+      </a>
+      <a class="card" href="ad-jonction.html">
+        <span class="card-number">015</span>
+        <div class="card-icon">🔗</div>
+        <div class="card-title">Jonction au domaine</div>
+        <div class="card-desc">Intégration d'un poste Windows 10/11 au domaine AD et vérification de l'application des GPO.</div>
+        <span class="card-tag" style="background:rgba(139,92,246,0.15);color:#a78bfa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">AD DS</span>
       </a>
     </div>
   </section>
@@ -296,4 +391,4 @@
   </footer>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-    const observer = new IntersectionObserver((entries))
+    const observer = new IntersectionObserver((entries)
