@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Règles pfSense — ZabbixTuto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0e1a; --bg2: #0f1526; --surface: #141c30; --border: #1e2d4a;
+    --accent: #e8372a; --blue: #3b82f6; --green: #22c55e; --orange: #f97316;
+    --text: #e2e8f0; --muted: #64748b;
+    --mono: 'Space Mono', monospace; --sans: 'Syne', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 1rem 2.5rem; background: rgba(10,14,26,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  .nav-logo { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: var(--text); text-decoration: none; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+  .nav-links > li { position: relative; }
+  .nav-links a { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s; padding: 0.5rem 0; display: block; }
+  .nav-links a:hover { color: var(--text); }
+  .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; background: var(--bg2); border: 1px solid var(--border); min-width: 280px; list-style: none; z-index: 200; padding: 0.5rem 0; max-height: 80vh; overflow-y: auto; }
+  .dropdown:hover .dropdown-menu { display: block; }
+  .dropdown-menu li a { padding: 0.6rem 1.2rem; font-size: 0.7rem; color: var(--muted); display: block; text-decoration: none; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; transition: background 0.15s, color 0.15s; }
+  .dropdown-menu li a:hover { background: var(--surface); color: var(--text); }
+  .dm-label { padding: 0.4rem 1.2rem; font-size: 0.6rem; color: var(--accent); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.15em; }
+  .dm-sep { border-top: 1px solid var(--border); margin: 0.4rem 0; }
+  .nav-burger { display: none; background: none; border: 1px solid var(--border); color: var(--text); padding: 0.4rem 0.8rem; cursor: pointer; font-size: 1rem; }
+  .mobile-menu { display: none; position: fixed; top: 60px; left: 0; right: 0; background: var(--bg2); border-bottom: 1px solid var(--border); z-index: 99; padding: 1rem; max-height: calc(100vh - 60px); overflow-y: auto; }
+  .mobile-menu.open { display: block; }
+  .mobile-menu a { display: block; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-decoration: none; padding: 0.6rem 0; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.08em; }
+  .mobile-menu a:last-child { border-bottom: none; }
+  .mobile-menu .m-label { font-family: var(--mono); font-size: 0.6rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; padding: 0.75rem 0 0.2rem; }
+  .page-layout { display: flex; padding-top: 60px; min-height: 100vh; position: relative; z-index: 1; }
+  .sidebar { width: 260px; flex-shrink: 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; border-right: 1px solid var(--border); background: var(--bg2); padding: 2rem 0; }
+  .sidebar-title { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15em; padding: 0 1.5rem; margin-bottom: 1rem; }
+  .sidebar-nav { list-style: none; }
+  .sidebar-nav li a { display: flex; align-items: center; gap: 0.75rem; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-decoration: none; padding: 0.6rem 1.5rem; border-left: 2px solid transparent; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.06em; }
+  .sidebar-nav li a:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .sidebar-nav li a.active { color: var(--text); border-left-color: var(--accent); background: rgba(232,55,42,0.06); }
+  .sidebar-nav li a .step-num { color: var(--accent); font-size: 0.6rem; flex-shrink: 0; }
+  .sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 1rem 1.5rem; }
+  .main-content { flex: 1; max-width: 820px; padding: 3rem 3.5rem; }
+  .chapter-header { margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+  .chapter-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .chapter-num { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; }
+  .chapter-tag { font-family: var(--mono); font-size: 0.65rem; padding: 0.2rem 0.7rem; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .tag-dhcp { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .tag-pfsense { background: rgba(249,115,22,0.15); color: #fb923c; }
+  .tag-glpi { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .tag-proxy { background: rgba(168,85,247,0.15); color: #c084fc; }
+  .tag-gui { background: rgba(100,116,139,0.2); color: #94a3b8; }
+  .chapter-title { font-size: 2.8rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; margin-bottom: 1rem; }
+  .chapter-desc { font-size: 1rem; color: var(--muted); line-height: 1.7; max-width: 580px; }
+  .step { margin-bottom: 3rem; }
+  .step-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+  .step-badge { width: 32px; height: 32px; background: var(--accent); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.75rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .step-title { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; }
+  p { color: #94a3b8; line-height: 1.75; margin-bottom: 1rem; font-size: 0.95rem; }
+  ol { color: #94a3b8; padding-left: 1.5rem; margin-bottom: 1rem; }
+  ol li { margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.7; padding-left: 0.4rem; }
+  ol li strong { color: var(--text); }
+  .nav-path { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--surface); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 2px; margin: 0.75rem 0 1.25rem; font-family: var(--mono); font-size: 0.75rem; color: var(--muted); flex-wrap: wrap; }
+  .nav-path span { color: var(--accent); }
+  .nav-path .arrow { color: var(--border); }
+  .code-block { background: #080c18; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin: 1.25rem 0; }
+  .code-header { background: var(--surface); padding: 0.6rem 1rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .code-lang { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .code-copy { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); background: none; border: 1px solid var(--border); padding: 0.2rem 0.6rem; cursor: pointer; border-radius: 2px; transition: color 0.2s; }
+  .code-copy:hover { color: var(--text); }
+  .code-body { padding: 1.25rem 1.5rem; font-family: var(--mono); font-size: 0.8rem; line-height: 1.8; overflow-x: auto; }
+  .code-body .c { color: #475569; } .code-body .s { color: #4ade80; } .code-body .p { color: #4ade80; }
+  .info-box { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.25); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.75rem; }
+  .info-box .icon { flex-shrink: 0; font-size: 1rem; margin-top: 0.1rem; }
+  .info-box p { color: #93c5fd; margin: 0; font-size: 0.85rem; }
+  .warn-box { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.75rem; }
+  .warn-box .icon { flex-shrink: 0; }
+  .warn-box p { color: #fbbf24; margin: 0; font-size: 0.85rem; }
+  .success-box { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.25rem 0; display: flex; gap: 0.75rem; }
+  .success-box .icon { flex-shrink: 0; }
+  .success-box p { color: #4ade80; margin: 0; font-size: 0.85rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.85rem; }
+  th { background: var(--surface); font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 0.75rem 1rem; text-align: left; border: 1px solid var(--border); }
+  td { padding: 0.75rem 1rem; border: 1px solid var(--border); color: #94a3b8; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  td code { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); background: rgba(232,55,42,0.1); padding: 0.1rem 0.4rem; border-radius: 2px; }
+  .pagination { display: flex; justify-content: space-between; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+  .page-btn { display: flex; flex-direction: column; gap: 0.3rem; text-decoration: none; padding: 1rem 1.5rem; border: 1px solid var(--border); border-radius: 2px; transition: border-color 0.2s, background 0.2s; max-width: 240px; }
+  .page-btn:hover { border-color: var(--accent); background: rgba(232,55,42,0.05); }
+  .page-btn-dir { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .page-btn-title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+  .page-btn.next { text-align: right; margin-left: auto; }
+  footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 1.5rem 2.5rem; display: flex; justify-content: space-between; align-items: center; background: var(--bg2); margin-top: 4rem; }
+  .footer-left { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+  .footer-left span { color: var(--accent); }
+  .footer-right { display: flex; gap: 1.5rem; }
+  .footer-right a { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); text-decoration: none; text-transform: uppercase; letter-spacing: 0.08em; transition: color 0.2s; }
+  .footer-right a:hover { color: var(--text); }
+  @media (max-width: 900px) { .sidebar { display: none; } .main-content { padding: 2rem 1.5rem; } .chapter-title { font-size: 2rem; } .nav-links { display: none; } .nav-burger { display: block; } }
+</style>
+</head>
+<body>
+  
+  <nav>
+    <a href="index.html" class="nav-logo"><span>//</span> ZabbixTuto</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li class="dropdown">
+        <a href="#">Tutoriels ▾</a>
+        <ul class="dropdown-menu">
+          <li class="dm-label">Supervision Zabbix</li>
+          <li><a href="zabbix-server.html">01 — Serveur Zabbix</a></li>
+          <li><a href="pfsense.html">02 — Intégration pfSense</a></li>
+          <li><a href="hyperv.html">03 — Intégration Hyper-V</a></li>
+          <li><a href="dashboard.html">04 — Tableaux de bord</a></li>
+          <li class="dm-sep"></li>
+          <li class="dm-label">Hyper-V</li>
+          <li><a href="hyperv-prise-en-main.html">05 — Prise en main Hyper-V</a></li>
+          <li><a href="hyperv-vms.html">06 — Création de VMs</a></li>
+          <li class="dm-sep"></li>
+          <li class="dm-label">Installations</li>
+          <li><a href="install-windows-server.html">07 — Windows Server 2025</a></li>
+          <li><a href="install-windows-client.html">08 — Windows 10/11</a></li>
+          <li><a href="install-debian.html">09 — Debian Linux</a></li>
+          <li><a href="install-pfsense.html">10 — pfSense 2.7</a></li>
+          <li class="dm-sep"></li>
+          <li class="dm-label">Active Directory</li>
+          <li><a href="ad-installation.html">11 — Installation AD DS</a></li>
+          <li><a href="ad-utilisateurs.html">12 — Utilisateurs AD</a></li>
+          <li><a href="ad-ou.html">13 — Unités d'organisation</a></li>
+          <li><a href="ad-gpo.html">14 — Stratégies GPO</a></li>
+          <li><a href="ad-jonction.html">15 — Jonction au domaine</a></li>
+          <li class="dm-sep"></li>
+          <li class="dm-label">Services réseau</li>
+          <li><a href="dhcp-windows.html">16 — Rôle DHCP Windows</a></li>
+          <li><a href="pfsense-regles.html">17 — Règles pfSense</a></li>
+          <li><a href="glpi-agent.html">18 — Agent GLPI</a></li>
+          <li><a href="squid-pfsense.html">19 — Proxy Squid</a></li>
+        </ul>
+      </li>
+      <li><a href="https://github.com/" target="_blank">GitHub →</a></li>
+    </ul>
+    <button class="nav-burger" onclick="toggleMenu()">☰</button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html">Accueil</a>
+    <div class="m-label">Supervision Zabbix</div>
+    <a href="zabbix-server.html">01 — Serveur Zabbix</a>
+    <a href="pfsense.html">02 — Intégration pfSense</a>
+    <a href="hyperv.html">03 — Intégration Hyper-V</a>
+    <a href="dashboard.html">04 — Tableaux de bord</a>
+    <div class="m-label">Hyper-V</div>
+    <a href="hyperv-prise-en-main.html">05 — Prise en main Hyper-V</a>
+    <a href="hyperv-vms.html">06 — Création de VMs</a>
+    <div class="m-label">Installations</div>
+    <a href="install-windows-server.html">07 — Windows Server 2025</a>
+    <a href="install-windows-client.html">08 — Windows 10/11</a>
+    <a href="install-debian.html">09 — Debian Linux</a>
+    <a href="install-pfsense.html">10 — pfSense 2.7</a>
+    <div class="m-label">Active Directory</div>
+    <a href="ad-installation.html">11 — Installation AD DS</a>
+    <a href="ad-utilisateurs.html">12 — Utilisateurs AD</a>
+    <a href="ad-ou.html">13 — Unités d'organisation</a>
+    <a href="ad-gpo.html">14 — Stratégies GPO</a>
+    <a href="ad-jonction.html">15 — Jonction au domaine</a>
+    <div class="m-label">Services réseau</div>
+    <a href="dhcp-windows.html">16 — Rôle DHCP Windows</a>
+    <a href="pfsense-regles.html">17 — Règles pfSense</a>
+    <a href="glpi-agent.html">18 — Agent GLPI</a>
+    <a href="squid-pfsense.html">19 — Proxy Squid</a>
+    <a href="https://github.com/" target="_blank">GitHub →</a>
+  </div>
+
+  
+<div class="page-layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Sommaire</div>
+    <ul class="sidebar-nav">
+      <li><a href="#intro" class="active"><span class="step-num">01</span> Introduction</a></li>
+      <li><a href="#alias"><span class="step-num">02</span> Alias</a></li>
+      <li><a href="#firewall"><span class="step-num">03</span> Règles pare-feu</a></li>
+      <li><a href="#nat"><span class="step-num">04</span> NAT Outbound</a></li>
+      <li><a href="#port-forward"><span class="step-num">05</span> Redirection de ports</a></li>
+      <li><a href="#logs"><span class="step-num">06</span> Logs & vérification</a></li>
+    </ul>
+    <hr class="sidebar-divider"/>
+    <ul class="sidebar-nav">
+      <li><a href="dhcp-windows.html">← Rôle DHCP</a></li>
+      <li><a href="glpi-agent.html">→ Agent GLPI</a></li>
+    </ul>
+  </aside>
+  <main class="main-content">
+    <div class="chapter-header">
+      <div class="chapter-meta">
+        <span class="chapter-num">Chapitre 17</span>
+        <span class="chapter-tag tag-pfsense">pfSense</span>
+        <span class="chapter-tag tag-gui">GUI</span>
+      </div>
+      <h1 class="chapter-title">Règles pfSense</h1>
+      <p class="chapter-desc">Création de règles de pare-feu, configuration du NAT et redirection de ports dans pfSense 2.7 via l'interface web.</p>
+    </div>
+
+    <div class="step" id="intro">
+      <div class="step-header"><div class="step-badge">01</div><h2 class="step-title">Introduction</h2></div>
+      <p>pfSense filtre le trafic réseau à l'aide de règles de pare-feu appliquées sur chaque interface. Les règles sont évaluées <strong>de haut en bas</strong> — la première règle correspondante est appliquée.</p>
+      <table>
+        <tr><th>Concept</th><th>Description</th></tr>
+        <tr><td>Règle de pare-feu</td><td>Autorise ou bloque le trafic selon des critères (IP source, destination, port, protocole)</td></tr>
+        <tr><td>Alias</td><td>Groupe nommé d'adresses IP ou de ports pour simplifier les règles</td></tr>
+        <tr><td>NAT Outbound</td><td>Traduction d'adresse pour le trafic sortant vers Internet (masquage d'IP)</td></tr>
+        <tr><td>Port Forward</td><td>Redirige le trafic entrant sur un port WAN vers un serveur interne (LAN)</td></tr>
+        <tr><td>Floating Rules</td><td>Règles globales s'appliquant à toutes les interfaces</td></tr>
+      </table>
+      <div class="info-box"><span class="icon">ℹ️</span><p>pfSense applique une règle implicite <strong>"Tout bloquer"</strong> à la fin de chaque liste. Tout trafic non explicitement autorisé est bloqué. Sur l'interface LAN, une règle <strong>"Allow LAN to any"</strong> est créée par défaut.</p></div>
+    </div>
+
+    <div class="step" id="alias">
+      <div class="step-header"><div class="step-badge">02</div><h2 class="step-title">Créer des alias</h2></div>
+      <p>Les alias simplifient la gestion des règles en regroupant des IPs ou des ports sous un nom. Les modifier en un seul endroit met à jour toutes les règles qui les utilisent.</p>
+      <div class="nav-path"><span>Firewall</span><span class="arrow">→</span><span>Aliases</span><span class="arrow">→</span><strong style="color:var(--text)">Add</strong></div>
+      <p><strong>Alias d'adresses IP (serveurs) :</strong></p>
+      <table>
+        <tr><th>Nom</th><th>Type</th><th>Contenu</th></tr>
+        <tr><td><code>SERVEURS_INTERNES</code></td><td>Host(s)</td><td><code>192.168.2.11</code>, <code>192.168.2.16</code>, <code>192.168.2.18</code></td></tr>
+        <tr><td><code>DNS_EXTERNES</code></td><td>Host(s)</td><td><code>8.8.8.8</code>, <code>1.1.1.1</code></td></tr>
+      </table>
+      <p><strong>Alias de ports :</strong></p>
+      <table>
+        <tr><th>Nom</th><th>Type</th><th>Ports</th></tr>
+        <tr><td><code>PORTS_WEB</code></td><td>Port(s)</td><td><code>80</code>, <code>443</code></td></tr>
+        <tr><td><code>PORTS_ADMIN</code></td><td>Port(s)</td><td><code>22</code>, <code>3389</code>, <code>8443</code></td></tr>
+        <tr><td><code>PORTS_ZABBIX</code></td><td>Port(s)</td><td><code>10050</code>, <code>10051</code>, <code>161</code></td></tr>
+      </table>
+      <p>Cliquer <strong>Save</strong> puis <strong>Apply Changes</strong> après chaque alias.</p>
+    </div>
+
+    <div class="step" id="firewall">
+      <div class="step-header"><div class="step-badge">03</div><h2 class="step-title">Règles de pare-feu</h2></div>
+      <p>Les règles LAN contrôlent ce que les machines du réseau local peuvent faire. Naviguer vers :</p>
+      <div class="nav-path"><span>Firewall</span><span class="arrow">→</span><span>Rules</span><span class="arrow">→</span><strong style="color:var(--text)">LAN</strong></div>
+      <p><strong>Règles LAN recommandées :</strong></p>
+      <table>
+        <tr><th>Action</th><th>Protocole</th><th>Source</th><th>Destination</th><th>Port</th><th>Description</th></tr>
+        <tr><td>✅ Pass</td><td>TCP/UDP</td><td>LAN net</td><td>any</td><td>PORTS_WEB</td><td>Autoriser navigation web</td></tr>
+        <tr><td>✅ Pass</td><td>UDP</td><td>LAN net</td><td>DNS_EXTERNES</td><td>53</td><td>Autoriser DNS externe</td></tr>
+        <tr><td>✅ Pass</td><td>TCP/UDP</td><td>LAN net</td><td>SERVEURS_INTERNES</td><td>PORTS_ZABBIX</td><td>Autoriser supervision Zabbix</td></tr>
+        <tr><td>✅ Pass</td><td>TCP</td><td>192.168.2.18</td><td>LAN net</td><td>10050</td><td>Zabbix interroge les agents</td></tr>
+        <tr><td>🚫 Block</td><td>TCP</td><td>LAN net</td><td>any</td><td>PORTS_ADMIN</td><td>Bloquer accès admin depuis LAN</td></tr>
+      </table>
+      <p>Pour ajouter une règle, cliquer sur <strong>Add ↑</strong> (en haut de liste, priorité haute) :</p>
+      <ol>
+        <li><strong>Action</strong> → Pass / Block / Reject</li>
+        <li><strong>Interface</strong> → LAN (ou WAN selon le sens du trafic)</li>
+        <li><strong>Address Family</strong> → IPv4</li>
+        <li><strong>Protocol</strong> → TCP, UDP, TCP/UDP, ICMP...</li>
+        <li><strong>Source</strong> → réseau source (ex: <code>LAN net</code> ou IP précise)</li>
+        <li><strong>Destination</strong> → réseau ou alias de destination</li>
+        <li><strong>Destination Port Range</strong> → port ou alias de ports</li>
+        <li><strong>Description</strong> → toujours renseigner pour documenter la règle</li>
+        <li>Cliquer <strong>Save</strong> puis <strong>Apply Changes</strong></li>
+      </ol>
+      <div class="warn-box"><span class="icon">⚠️</span><p>Les règles sont évaluées de <strong>haut en bas</strong>. Placer les règles de blocage <strong>avant</strong> les règles d'autorisation générales. Une règle "Block all" placée en bas n'aura aucun effet si une règle "Pass any" la précède.</p></div>
+    </div>
+
+    <div class="step" id="nat">
+      <div class="step-header"><div class="step-badge">04</div><h2 class="step-title">NAT Outbound</h2></div>
+      <p>Le NAT Outbound (masquage) permet aux machines du LAN d'accéder à Internet en utilisant l'IP WAN de pfSense. Par défaut, pfSense est en mode <strong>Automatic Outbound NAT</strong>.</p>
+      <div class="nav-path"><span>Firewall</span><span class="arrow">→</span><span>NAT</span><span class="arrow">→</span><strong style="color:var(--text)">Outbound</strong></div>
+      <table>
+        <tr><th>Mode</th><th>Description</th></tr>
+        <tr><td>Automatic Outbound NAT</td><td>pfSense crée automatiquement les règles NAT — recommandé pour la plupart des cas</td></tr>
+        <tr><td>Hybrid Outbound NAT</td><td>Règles automatiques + règles manuelles personnalisées</td></tr>
+        <tr><td>Manual Outbound NAT</td><td>Contrôle total — toutes les règles sont définies manuellement</td></tr>
+      </table>
+      <p>Pour une configuration standard, laisser le mode <strong>Automatic</strong>. Vérifier que des règles NAT sont bien générées pour le réseau <code>192.168.2.0/24</code> vers l'interface WAN.</p>
+    </div>
+
+    <div class="step" id="port-forward">
+      <div class="step-header"><div class="step-badge">05</div><h2 class="step-title">Redirection de ports (Port Forward)</h2></div>
+      <p>La redirection de ports permet d'exposer un service interne vers l'extérieur. Exemple : exposer l'interface Zabbix (<code>192.168.2.18:80</code>) depuis le WAN.</p>
+      <div class="nav-path"><span>Firewall</span><span class="arrow">→</span><span>NAT</span><span class="arrow">→</span><span>Port Forward</span><span class="arrow">→</span><strong style="color:var(--text)">Add</strong></div>
+      <table>
+        <tr><th>Paramètre</th><th>Valeur exemple</th></tr>
+        <tr><td>Interface</td><td>WAN</td></tr>
+        <tr><td>Protocol</td><td>TCP</td></tr>
+        <tr><td>Destination</td><td>WAN address</td></tr>
+        <tr><td>Destination Port Range</td><td><code>8080</code> (port externe)</td></tr>
+        <tr><td>Redirect Target IP</td><td><code>192.168.2.18</code> (serveur Zabbix)</td></tr>
+        <tr><td>Redirect Target Port</td><td><code>80</code> (port interne)</td></tr>
+        <tr><td>Description</td><td><code>Accès Zabbix depuis WAN</code></td></tr>
+        <tr><td>Filter rule association</td><td>Add associated filter rule (crée automatiquement la règle firewall)</td></tr>
+      </table>
+      <div class="success-box"><span class="icon">✅</span><p>Cliquer <strong>Save</strong> puis <strong>Apply Changes</strong>. La règle de redirection de port est active. Tester depuis l'extérieur en accédant à <code>http://IP_WAN:8080</code>.</p></div>
+    </div>
+
+    <div class="step" id="logs">
+      <div class="step-header"><div class="step-badge">06</div><h2 class="step-title">Logs et vérification</h2></div>
+      <p>pfSense journalise le trafic bloqué et autorisé. Pour consulter les logs :</p>
+      <div class="nav-path"><span>Status</span><span class="arrow">→</span><span>System Logs</span><span class="arrow">→</span><strong style="color:var(--text)">Firewall</strong></div>
+      <table>
+        <tr><th>Colonne</th><th>Description</th></tr>
+        <tr><td>Time</td><td>Horodatage de l'événement</td></tr>
+        <tr><td>Interface</td><td>Interface concernée (LAN, WAN...)</td></tr>
+        <tr><td>Action</td><td>Pass (✅) ou Block (🚫)</td></tr>
+        <tr><td>Source</td><td>IP et port source</td></tr>
+        <tr><td>Destination</td><td>IP et port de destination</td></tr>
+        <tr><td>Proto</td><td>Protocole (TCP, UDP, ICMP...)</td></tr>
+      </table>
+      <p>Pour activer la journalisation sur une règle spécifique, cocher l'option <strong>"Log packets that are handled by this rule"</strong> dans les propriétés de la règle.</p>
+      <div class="info-box"><span class="icon">ℹ️</span><p>L'outil <strong>Packet Capture</strong> (Diagnostics → Packet Capture) permet de capturer le trafic en temps réel sur une interface, très utile pour déboguer les règles.</p></div>
+    </div>
+
+    <div class="pagination">
+      <a href="dhcp-windows.html" class="page-btn">
+        <span class="page-btn-dir">← Précédent</span>
+        <span class="page-btn-title">Rôle DHCP</span>
+      </a>
+      <a href="glpi-agent.html" class="page-btn next">
+        <span class="page-btn-dir">Suivant →</span>
+        <span class="page-btn-title">Agent GLPI</span>
+      </a>
+    </div>
+  </main>
+</div>
+  
+  <footer>
+    <div class="footer-left"><span>//</span> ZabbixTuto — BTS SIO 2026</div>
+    <div class="footer-right">
+      <a href="https://github.com/" target="_blank">GitHub</a>
+      <a href="https://www.zabbix.com/documentation" target="_blank">Docs Zabbix</a>
+    </div>
+  </footer>
+
+  <script>
+  function toggleMenu() { document.getElementById('mobileMenu').classList.toggle('open'); }
+  const steps = document.querySelectorAll('.step[id]');
+  const sideLinks = document.querySelectorAll('.sidebar-nav a[href^="#"]');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        sideLinks.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector('.sidebar-nav a[href="#'+e.target.id+'"]');
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+  steps.forEach(s => obs.observe(s));
+  document.querySelectorAll('.code-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.closest('.code-block').querySelector('.code-body').innerText);
+      btn.textContent = 'Copié !';
+      setTimeout(() => btn.textContent = 'Copier', 1500);
+    });
+  });
+</script>
+</body>
+</html>
