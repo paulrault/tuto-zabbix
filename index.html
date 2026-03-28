@@ -156,6 +156,12 @@
           <li><a href="ad-ou.html">13 — Unités d'organisation</a></li>
           <li><a href="ad-gpo.html">14 — Stratégies GPO</a></li>
           <li><a href="ad-jonction.html">15 — Jonction au domaine</a></li>
+          <li style="border-top:1px solid #1e2d4a;margin:0.4rem 0;"></li>
+          <li style="padding:0.4rem 1.2rem;font-size:0.6rem;color:#e8372a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.15em;">Services réseau</li>
+          <li><a href="dhcp-windows.html">16 — Rôle DHCP Windows</a></li>
+          <li><a href="pfsense-regles.html">17 — Règles pfSense</a></li>
+          <li><a href="glpi-agent.html">18 — Agent GLPI</a></li>
+          <li><a href="squid-pfsense.html">19 — Proxy Squid</a></li>
         </ul>
       </li>
       <li><a href="#demarrer">Démarrer</a></li>
@@ -198,7 +204,7 @@
   </section>
 
   <div class="stats reveal">
-    <div class="stat"><span class="stat-number">15</span><span class="stat-label">Chapitres</span></div>
+    <div class="stat"><span class="stat-number">19</span><span class="stat-label">Chapitres</span></div>
     <div class="stat"><span class="stat-number">SNMP</span><span class="stat-label">Protocole pfSense</span></div>
     <div class="stat"><span class="stat-number">ZBX</span><span class="stat-label">Agent Hyper-V</span></div>
     <div class="stat"><span class="stat-number">7.0</span><span class="stat-label">Version Zabbix LTS</span></div>
@@ -315,8 +321,64 @@
         <div class="card-desc">Intégration d'un poste Windows 10/11 au domaine AD et vérification de l'application des GPO.</div>
         <span class="card-tag" style="background:rgba(139,92,246,0.15);color:#a78bfa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">AD DS</span>
       </a>
-    </div>
-  </section>
+      <a class="card" href="dhcp-windows.html">
+        <span class="card-number">016</span>
+        <div class="card-icon">📡</div>
+        <div class="card-title">Rôle DHCP</div>
+        <div class="card-desc">Étendue, options, exclusions, réservations et haute disponibilité DHCP sur Windows Server 2025.</div>
+        <span class="card-tag" style="background:rgba(59,130,246,0.15);color:#60a5fa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">DHCP</span>
+      </a>
+      <a class="card" href="pfsense-regles.html">
+        <span class="card-number">017</span>
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">Règles pfSense</div>
+        <div class="card-desc">Alias, règles de pare-feu, NAT Outbound et redirection de ports dans pfSense 2.7.</div>
+        <span class="card-tag" style="background:rgba(249,115,22,0.15);color:#fb923c;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">pfSense</span>
+      </a>
+      <a class="card" href="glpi-agent.html">
+        <span class="card-number">018</span>
+        <div class="card-icon">📋</div>
+        <div class="card-title">Agent GLPI</div>
+        <div class="card-desc">Installation de l'agent GLPI sur Debian et configuration de la remontée d'inventaire vers GLPI.</div>
+        <span class="card-tag" style="background:rgba(34,197,94,0.15);color:#4ade80;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">GLPI</span>
+      </a>
+      <a class="card" href="squid-pfsense.html">
+        <span class="card-number">019</span>
+        <div class="card-icon">🌐</div>
+        <div class="card-title">Proxy Squid</div>
+        <div class="card-desc">Installation de Squid dans pfSense : cache web, proxy transparent et filtrage SquidGuard.</div>
+        <span class="card-tag" style="background:rgba(168,85,247,0.15);color:#c084fc;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">Proxy</span>
+      </a>
+  
+      <a class="card" href="dhcp-windows.html">
+        <span class="card-number">016</span>
+        <div class="card-icon">📡</div>
+        <div class="card-title">Rôle DHCP</div>
+        <div class="card-desc">Installation du rôle DHCP sur Windows Server : étendues, options, réservations et haute disponibilité.</div>
+        <span class="card-tag" style="background:rgba(34,197,94,0.15);color:#4ade80;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">DHCP</span>
+      </a>
+      <a class="card" href="pfsense-regles.html">
+        <span class="card-number">017</span>
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">Règles pfSense</div>
+        <div class="card-desc">Création de règles de pare-feu, alias, et redirection de ports NAT sur pfSense 2.7.</div>
+        <span class="card-tag" style="background:rgba(249,115,22,0.15);color:#fb923c;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">pfSense</span>
+      </a>
+      <a class="card" href="glpi-agent.html">
+        <span class="card-number">018</span>
+        <div class="card-icon">📋</div>
+        <div class="card-title">Agent GLPI</div>
+        <div class="card-desc">Installation de l'agent GLPI sur Debian et configuration de la remontée d'inventaire automatique.</div>
+        <span class="card-tag" style="background:rgba(59,130,246,0.15);color:#60a5fa;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">GLPI</span>
+      </a>
+      <a class="card" href="squid-pfsense.html">
+        <span class="card-number">019</span>
+        <div class="card-icon">🌐</div>
+        <div class="card-title">Proxy Squid</div>
+        <div class="card-desc">Installation et configuration du proxy Squid dans pfSense avec filtrage SquidGuard.</div>
+        <span class="card-tag" style="background:rgba(168,85,247,0.15);color:#c084fc;font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:2px;text-transform:uppercase;">Proxy</span>
+      </a>
+    </div></section>
 
   <section id="demarrer">
     <div class="section-header reveal">
